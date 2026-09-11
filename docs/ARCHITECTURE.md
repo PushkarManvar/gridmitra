@@ -61,16 +61,21 @@ gridmitra/
 │   └── package.json
 ├── backend/                  FastAPI + PuLP
 │   ├── app/
-│   │   ├── main.py           FastAPI app, CORS, router registration
+│   │   ├── main.py           FastAPI app, CORS, 422 handler, migrations on startup
 │   │   ├── api/routes.py     HTTP endpoints only
 │   │   ├── models.py         Pydantic request/response schemas + validation
-│   │   ├── core/             Config and database readiness check
+│   │   ├── core/             Config, database readiness check, migration runner
+│   │   ├── repositories/     PostgreSQL persistence (owns database access)
 │   │   └── services/
-│   │       └── optimizer.py  MILP model, solver, metrics, explanations
+│   │       ├── optimizer.py  MILP model, solver, metrics, explanations
+│   │       ├── baseline.py   Reactive no-lookahead baseline
+│   │       ├── metrics.py    KPI calculations
+│   │       ├── persistence.py  Graceful save; degradation on DB failure
+│   │       └── csv_export.py CSV rendering
 │   ├── tests/                Backend and optimizer tests
 │   ├── Dockerfile            Python 3.12 API
 │   └── requirements*.txt
-├── db/init/001_schema.sql    PostgreSQL schema (private gridmitra schema)
+├── db/migrations/*.sql        Ordered PostgreSQL migrations (private gridmitra schema)
 ├── data/demo_scenario.json   Prepared 24-hour demo inputs
 ├── scripts/                  Cross-platform setup helpers
 ├── docs/                     Scope, architecture, API, and workflow
@@ -132,17 +137,18 @@ flowchart TD
 | --- | --- | --- |
 | GET | `/api/v1/health` | API, solver, and database readiness |
 | GET | `/api/v1/scenarios/demo` | Prepared demo scenario (reads `data/demo_scenario.json`) |
-| POST | `/api/v1/optimize` | Validate and solve one 24-hour dispatch |
+| POST | `/api/v1/optimize` | Validate and solve one 24-hour dispatch; persists the run when the database is up |
+| POST | `/api/v1/optimize/export` | Render a calculated run as CSV from the response body |
 
-Planned: run persistence/list/export endpoints, and a scenario endpoint set for the Scenario Lab.
+Planned: run history/list endpoints (`GET /api/v1/runs` and `GET /api/v1/runs/{id}/export`) and a scenario endpoint set for the Scenario Lab.
 
 ## Data boundary
 
 The frontend sends only typed scenario JSON. FastAPI owns validation and the backend owns all optimization logic. This prevents two different calculation engines from appearing in the project.
 
-The local database uses a private `gridmitra` schema with tables `scenarios` and `optimization_runs`. If hosted on Supabase, keep this schema outside the Data API unless direct browser access is intentionally introduced; if any table is exposed later, add minimum grants and tested row-level security policies in the same migration.
+The local database uses a private `gridmitra` schema with sites, site assets, scenarios, scenario hours, optimization runs, dispatch hours and decision explanations. If hosted on Supabase, keep this schema outside the Data API unless direct browser access is intentionally introduced; if any table is exposed later, add minimum grants and tested row-level security policies in the same migration.
 
-Persistence is **not yet wired into the API flow**; the schema is ready (`db/init/001_schema.sql`), and the demo path runs purely from prepared JSON so it works without a database if needed.
+Persistence is wired into `POST /api/v1/optimize`: after a solve, the site, scenario, run, 24 dispatch hours and explanations are saved in one transaction. If saving fails, the calculated result is still returned with `persistence.saved = false` and a `DATABASE_SAVE_FAILED` warning, so the prepared-data demo path works without a database.
 
 ## Validation
 
@@ -185,5 +191,5 @@ Full detail belongs in `docs/OPTIMIZATION_MODEL.md`. Current implementation in `
 
 - Frontend: Vercel.
 - Backend: Render or Railway.
-- Database: Supabase PostgreSQL; `db/init/001_schema.sql` applies as the baseline migration.
+- Database: Supabase PostgreSQL; `db/migrations/*.sql` apply in order at backend startup.
 - Demo must remain fully functional offline (prepared data path) regardless of deployment choices.

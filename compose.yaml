@@ -11,7 +11,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gridmitra} -d ${POSTGRES_DB:-gridmitra}"]
       interval: 5s
@@ -30,6 +29,7 @@ services:
     volumes:
       - ./backend:/app
       - ./data:/app/data:ro
+      - ./db:/app/db:ro
     depends_on:
       db:
         condition: service_healthy

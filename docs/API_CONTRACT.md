@@ -68,6 +68,7 @@ Invalid input is rejected with HTTP 422 before any solver runs.
 - `dispatch_hours`: array, exactly 24 entries per `DATA_CONTRACT.md` §5.3, with units in every field name.
 - `explanations`: deterministic, rule-generated explanations per `DATA_CONTRACT.md` §5.4 (`code`, `severity`, `hour_index`, `message`, `evidence`).
 - `warnings`: structured warnings with `code`, `severity`, `message` and optional `hour_index`.
+- `persistence`: `{"saved": bool, "message": string | null}`. `saved` is `true` when the run was written to the database; `false` (with `message` = `DATABASE_SAVE_FAILED` and a matching warning) when persistence failed. A database failure never removes the calculated result.
 
 ### Warnings
 
@@ -80,6 +81,21 @@ Standardized codes per `DATA_CONTRACT.md` §5.5:
 - `FALLBACK_DATA_USED` — simulated data was used in place of live input.
 
 The UI must show a warning whenever `p1_unserved_kwh` or `reserve_shortfall_kwh` is greater than zero.
+
+## `POST /api/v1/optimize/export`
+
+Exports a calculated run as CSV. The request body is the complete `OptimizationResponse` returned by `POST /api/v1/optimize` (with its current `persistence` and `warnings`), so export works entirely from the in-memory result and remains available even when database persistence failed.
+
+Response:
+
+- `Content-Type: text/csv`.
+- `Content-Disposition: attachment; filename="{run_id}.csv"`.
+- CSV sections:
+  - `run` metadata (run_id, status, scenario_id).
+  - `dispatch` table: header plus exactly 24 hourly rows with all `DATA_CONTRACT.md` §5.3 fields.
+  - `summary` and `baseline_summary` key/value rows for every `§5.2` field.
+  - `explanations` rows (code, severity, hour_index, message).
+  - `warnings` rows (code, severity, hour_index, message).
 
 ## Error responses
 
@@ -114,10 +130,11 @@ Implemented:
 
 - `GET /api/v1/health` returns `api`, `solver`, `database`; `database` failures never downgrade `api`.
 - `GET /api/v1/scenarios/demo` serves the committed 24-hour scenario.
-- `POST /api/v1/optimize` returns the full `DATA_CONTRACT.md` §5 response for valid solves and HTTP 500 on solver failure.
+- `POST /api/v1/optimize` returns the full `DATA_CONTRACT.md` §5 response for valid solves, HTTP 500 on solver failure, and attempts database persistence with `persistence.saved`.
+- Consistent 422 error object (`error.code`, `error.message`, `error.fields[]` with stable paths) for validation failures.
+- `POST /api/v1/optimize/export` renders the run as CSV from the response body, independent of database state.
+- Ordered SQL migrations under `db/migrations/`, applied at backend startup (`gridmitra.schema_migrations` tracks applied files).
 
-Remaining (backend tasks T5.x, T6.x):
+Planned (not yet implemented):
 
-- Consistent 422 error object shaping (`error.code`, `error.message`, `error.fields[]` with stable paths).
-- `GET /api/v1/runs` and `GET /api/v1/runs/{id}/export` (CSV export).
-- Persistence wiring with `persistence.saved` and the `DATABASE_SAVE_FAILED` warning.
+- `GET /api/v1/runs` and `GET /api/v1/runs/{id}/export` for persisted run history.
