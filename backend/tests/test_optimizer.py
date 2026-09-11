@@ -8,7 +8,15 @@ from app.services.optimizer import optimize_microgrid
 
 
 def load_demo() -> OptimizationRequest:
-    path = Path(__file__).resolve().parents[2] / "data" / "demo_scenario.json"
+    repo_root = Path(__file__).resolve().parents[2]
+    candidates = [
+        repo_root / "data" / "demo_scenario.json",
+        Path("/app/data/demo_scenario.json"),
+        Path("/data/demo_scenario.json"),
+    ]
+    path = next((candidate for candidate in candidates if candidate.exists()), None)
+    if path is None:
+        raise FileNotFoundError("demo_scenario.json not found in any known location")
     return OptimizationRequest.model_validate(json.loads(path.read_text(encoding="utf-8")))
 
 
