@@ -137,7 +137,7 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ---
 
-## Conflict log (as of PR #10 — T2.1–T6.2 migrated)
+## Conflict log (as of PR #11 — T2.1–T6.2 migrated)
 
 | Item | Current code | Target docs | Action |
 |---|---|---|---|
