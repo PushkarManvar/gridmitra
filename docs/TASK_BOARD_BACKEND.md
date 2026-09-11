@@ -23,7 +23,7 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 1 — Mock API (unblocks frontend)
 
-- [ ] **T1.1** Create mock API response file (e.g. `backend/app/data/mock_response.json`) matching `DATA_CONTRACT.md` §5 exactly.
+- [x] **T1.1** Create mock API response file (`backend/app/data/mock_response.json`) matching `DATA_CONTRACT.md` §5 exactly.
   - Done when: JSON parses against the planned response schema; frontend can render every field.
   - Cross-check: `[ ]` compare field-by-field against `DATA_CONTRACT.md` §5.1–§5.5 (run_id, status, dispatch_hours, summary, baseline_summary, explanations, warnings, persistence).
 
@@ -31,11 +31,11 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 2 — Schemas and demo data
 
-- [ ] **T2.1** Rewrite Pydantic request schemas per `DATA_CONTRACT.md` §4 (`scenario_id`, `scenario_name`, `scenario_type`, `site`, `assets`, `operating_policy`, `hours` with `p1..p4_demand_kwh`).
+- [x] **T2.1** Rewrite Pydantic request schemas per `DATA_CONTRACT.md` §4 (`scenario_id`, `scenario_name`, `scenario_type`, `site`, `assets`, `operating_policy`, `hours` with `p1..p4_demand_kwh`).
   - Done when: schemas validate the prepared demo payload; scenario-type enum per §3.2; `interval_hours == 1` enforced.
   - Cross-check: `[ ]` confirm `operating_policy` exposes **only** `carbon_price_per_kg_co2` (§4.7 — no safety penalties).
 
-- [ ] **T2.2** Rewrite `data/demo_scenario.json` to the new contract with realistic P1–P4 values (P4 largest, P1 smallest).
+- [x] **T2.2** Rewrite `data/demo_scenario.json` to the new contract with realistic P1–P4 values (flexible tiers scale P2 < P3 < P4; P1 magnitude is independent — §4.9 example has P1 largest).
   - Done when: 24 records, hours 0–23 unique, all values ≥ 0, validates against T2.1 schemas.
   - Cross-check: `[ ]` spot-check 3 rows for load-priority realism and unit suffixes (`_kwh`, `_kw`).
 
@@ -91,12 +91,12 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 5 — API endpoints and CSV (B: Bella)
 
-- [ ] **T5.1** Health endpoint returns separate `api`, `solver`, `database` (`API_CONTRACT.md`; `TEST_PLAN.md` §8).
-  - Done when: DB down still shows `api: ok`.
+- [x] **T5.1** Health endpoint returns separate `api`, `solver`, `database` (`API_CONTRACT.md`; `TEST_PLAN.md` §8).
+  - Done when: DB down still shows `api: ok`. (Implemented in PR #9.)
   - Cross-check: `[ ]` TEST_PLAN §8 first bullet.
 
-- [ ] **T5.2** Wire `/optimize` and `/scenarios/demo` to new schemas + status mapping (§9 of MODEL).
-  - Done when: prepared scenario → `optimal`; stress → `emergency_plan`; solver failure → `failed`/500.
+- [x] **T5.2** Wire `/optimize` and `/scenarios/demo` to new schemas + status mapping (§9 of MODEL).
+  - Done when: prepared scenario → `optimal`; stress → `emergency_plan`; solver failure → `failed`/500. (Implemented in PR #9.)
   - Cross-check: `[ ]` response matches DATA_CONTRACT §5 exactly (no `hours` field, use `dispatch_hours`).
 
 - [ ] **T5.3** CSV export endpoint (required — `DECISIONS.md` D008).
@@ -145,5 +145,5 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 | Penalty order | reserve > P1 | P1 > reserve > P2 > P3 > P4 | Resolved by T3.2 (PR #9) |
 | Status values | `optimal`, `feasible` | `optimal`, `emergency_plan`, `failed` | Resolved by T2.3 (PR #9) |
 | Response field | `hours` | `dispatch_hours` | Resolved by T2.3 (PR #9) |
-| Health | `api`, `database` | `api`, `solver`, `database` | Resolved in PR #9 (T5.1 remaining: formal tick) |
+| Health | `api`, `database` | `api`, `solver`, `database` | Resolved in PR #9 |
 | Persistence | schema exists, not wired | full workflow + save-failure resilience | Open — T6.x |
