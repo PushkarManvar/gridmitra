@@ -129,6 +129,19 @@ Do not memorize or claim fixed improvement percentages. Verify the following beh
 - Lower-priority demand is reduced before P1 when shortage exists
 - Reserve shortfall is shown if the terminal target cannot be met
 
+### Measured baseline-vs-GridMitra direction (from the current model)
+
+Do not claim fuel savings. In the current model GridMitra typically uses **equal or more diesel** than the reactive baseline because it:
+
+- Preserves the terminal reserve (final battery meets the target) instead of draining to the hard minimum.
+- Avoids unserved demand under stress (baseline sheds P1–P4 when it runs dry).
+
+Correct framing:
+
+> GridMitra keeps the reserve intact and serves demand the baseline would shed, at a modest cost. It trades a little diesel now for reliability later — that is the value of 24-hour lookahead.
+
+Quote measured values from the run, not fixed percentages.
+
 ## 6 Judge Questions and Short Answers
 
 ### Is this machine learning?
@@ -142,6 +155,10 @@ Do not memorize or claim fixed improvement percentages. Verify the following beh
 ### Why not simply use solar first and diesel last?
 
 > A fixed rule does not consider future demand, battery reserve, efficiency, diesel cost or service priority across 24 hours. The optimizer evaluates these constraints together.
+
+### Does GridMitra always reduce diesel?
+
+> Not necessarily. Its measured value is reliability and reserve discipline: it protects the terminal reserve and avoids unserved demand that a short-sighted operator would accept, sometimes at a modest diesel cost. Claiming unconditional fuel savings would be misleading; we report the measured comparison for each run.
 
 ### What happens when there is not enough energy?
 
