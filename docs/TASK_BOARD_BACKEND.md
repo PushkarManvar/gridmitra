@@ -99,25 +99,25 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
   - Done when: prepared scenario → `optimal`; stress → `emergency_plan`; solver failure → `failed`/500. (Implemented in PR #9.)
   - Cross-check: `[ ]` response matches DATA_CONTRACT §5 exactly (no `hours` field, use `dispatch_hours`).
 
-- [ ] **T5.3** CSV export endpoint (required — `DECISIONS.md` D008).
-  - Done when: CSV contains all 24 hourly rows + summary; works from the in-memory result even if DB save fails.
-  - Cross-check: `[ ]` TEST_PLAN E04 — export survives persistence failure.
+- [x] **T5.3** CSV export endpoint (required — `DECISIONS.md` D008).
+  - Done when: CSV contains all 24 hourly rows + summary; works from the in-memory result even if DB save fails. (Implemented as `POST /api/v1/optimize/export`.)
+  - Cross-check: `[x]` TEST_PLAN E04 — export survives persistence failure (unit test + real-DB outage check).
 
-- [ ] **T5.4** Consistent 422 error object per `DATA_CONTRACT.md` §6 (`error.code`, `error.message`, `error.fields[]` with stable paths).
+- [x] **T5.4** Consistent 422 error object per `DATA_CONTRACT.md` §6 (`error.code`, `error.message`, `error.fields[]` with stable paths).
   - Done when: TEST_PLAN §7 validation tests pass with field paths.
-  - Cross-check: `[ ]` validate rejects all §7 cases (24 records, negatives, bounds, enums, interval).
+  - Cross-check: `[x]` validate rejects all §7 cases (24 records, negatives, bounds, enums, interval).
 
 ---
 
 ## Phase 6 — Persistence (B: Bella)
 
-- [ ] **T6.1** Database migration per `DATABASE.md` §3 tables + §7 rules (ordered migrations, explicit constraints, enum checks).
-  - Done when: schema applies fresh in Docker; constraints reject invalid rows.
-  - Cross-check: `[ ]` `gridmitra` schema stays private; no grants for browser access (§1).
+- [x] **T6.1** Database migration per `DATABASE.md` §3 tables + §7 rules (ordered migrations, explicit constraints, enum checks).
+  - Done when: schema applies fresh in Docker; constraints reject invalid rows. (Migrations under `db/migrations/`, tracked in `gridmitra.schema_migrations`.)
+  - Cross-check: `[x]` `gridmitra` schema stays private; no grants for browser access (§1).
 
-- [ ] **T6.2** Persistence workflow per `DATABASE.md` §6: save site, scenario, run, dispatch_hours, explanations in one transaction; on failure return result with `persistence.saved=false` + `DATABASE_SAVE_FAILED`.
+- [x] **T6.2** Persistence workflow per `DATABASE.md` §6: save site, scenario, run, dispatch_hours, explanations in one transaction; on failure return result with `persistence.saved=false` + `DATABASE_SAVE_FAILED`.
   - Done when: TEST_PLAN E04 passes; calculated plan never lost.
-  - Cross-check: `[ ]` a DB outage still returns the full optimization response.
+  - Cross-check: `[x]` a DB outage still returns the full optimization response.
 
 ---
 
@@ -137,7 +137,7 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ---
 
-## Conflict log (as of PR #9 — T2.1–T4.3 migrated)
+## Conflict log (as of PR #10 — T2.1–T6.2 migrated)
 
 | Item | Current code | Target docs | Action |
 |---|---|---|---|
@@ -146,4 +146,4 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 | Status values | `optimal`, `feasible` | `optimal`, `emergency_plan`, `failed` | Resolved by T2.3 (PR #9) |
 | Response field | `hours` | `dispatch_hours` | Resolved by T2.3 (PR #9) |
 | Health | `api`, `database` | `api`, `solver`, `database` | Resolved in PR #9 |
-| Persistence | schema exists, not wired | full workflow + save-failure resilience | Open — T6.x |
+| Persistence | schema exists, not wired | full workflow + save-failure resilience | Resolved by T5.3/T5.4/T6.1/T6.2 (PR #10) |
