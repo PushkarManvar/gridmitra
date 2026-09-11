@@ -7,8 +7,8 @@ Create repository
 → Push initial project
 → Run GitHub Actions once
 → Confirm backend and frontend checks exist
-→ Enable branch ruleset
 → Invite teammates
+→ Note: branch protection requires GitHub Pro on private repos (manual PR + CI workflow instead)
 ```
 
 ## Team lead: create and upload
@@ -39,9 +39,20 @@ git config user.email "your-github-email@example.com"
 
 After the first push, GitHub Actions runs automatically. Open the **Actions** tab and confirm the workflow completes. Note the exact job names for the backend and frontend checks.
 
-## Enable branch ruleset
+## Enable branch protection (Pro-gated on private repos)
 
-Only after the first successful GitHub Actions run, and only after the backend and frontend checks exist in Actions, go to **Settings → Rules → Rulesets → New branch ruleset**:
+GitHub currently requires **GitHub Pro** to enable branch protection (classic or rulesets) on a **private** repository. On the free plan, both the rulesets API and the classic protection API return `403` ("Upgrade to GitHub Pro or make this repository public").
+
+For the hackathon, do not pay for Pro and do not make the repository public just for this. Instead:
+
+- Run the workflow manually: feature branch → push → open pull request → wait for CI (backend + frontend jobs) → one reviewer approves → squash-merge.
+- Never merge a pull request while any required CI check is failing.
+- Never force-push `main`.
+- Optionally revisit protection after the event if the repository is public or the account is upgraded.
+
+If the account is upgraded to Pro, or the repository is later made public, enable the ruleset exactly as in the reference below.
+
+Reference ruleset (GitHub Pro or public repos): **Settings → Rules → Rulesets → New branch ruleset**:
 
 - Target branch: `main`
 - Require pull request before merging

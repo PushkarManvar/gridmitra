@@ -1,6 +1,11 @@
 # 30-Hour MVP Board
 
-Owners: M1 = frontend, M2 = backend/optimizer, M3 = demo data/integration/QA. "All" means every member. Every task has exactly one accountable owner.
+Owners:
+- **M2 (backend/optimizer/data)**: PushkarManvar, Bella-M07
+- **M1 (frontend)**: Nishant3634, Mit-Prajapati
+- **M3 (integration/QA)**: whoever is free first
+
+Every task has exactly one accountable owner; teammates may assist. "All" means every member.
 
 ## Block 1 — foundation (hours 0–4)
 

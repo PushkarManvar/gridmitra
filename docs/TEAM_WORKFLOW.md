@@ -16,14 +16,17 @@ Ownership helps speed; it does not prevent teammates from helping elsewhere.
 
 ## One-time repository settings
 
-On GitHub, protect `main` with:
+Automated branch protection on `main` requires GitHub Pro for a private repository. On the free plan, protect `main` by process instead:
 
-- Require a pull request before merging
-- Require the `frontend` and `backend` status checks
-- Block force pushes and branch deletion
-- Allow squash merge
+- Every merge goes through a pull request.
+- CI (backend + frontend) must finish before merging.
+- One reviewer approves; never merge while a required check is failing.
+- Never force-push `main`.
+- Allow squash merge only.
 
-For a 30-hour hackathon, one quick approval is ideal. Never merge while any required CI check is failing. If only one member is available, the author can share a screen, run CI, and merge after a documented self-review; never bypass a failing check.
+For a 30-hour hackathon, one quick approval is ideal. If only one member is available, the author can share a screen, run CI, and merge after a documented self-review; never bypass a failing check.
+
+If the account is later upgraded to Pro or the repository becomes public, add the ruleset described in `docs/GITHUB_SETUP.md`.
 
 ## Feature development loop
 
