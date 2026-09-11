@@ -1,7 +1,7 @@
 # 30-Hour MVP Board
 
 Owners:
-- **M2 (backend/optimizer/data)**: PushkarManvar, Bella-M07
+- **M2 (backend/optimizer/data)**: PushkarManvar, Bella-M07 → detailed task list with doc cross-checks in `docs/TASK_BOARD_BACKEND.md`
 - **M1 (frontend)**: Nishant3634, Mit-Prajapati
 - **M3 (integration/QA)**: whoever is free first
 
