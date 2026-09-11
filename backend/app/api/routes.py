@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pulp
 from fastapi import APIRouter, HTTPException
 
 from app.core.database import database_is_ready
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/api/v1")
 async def health() -> dict[str, str]:
     return {
         "api": "ok",
+        "solver": "ok" if pulp.PULP_CBC_CMD(msg=False).available() else "unavailable",
         "database": "ok" if await database_is_ready() else "unavailable",
     }
 
@@ -31,4 +33,4 @@ async def optimize(request: OptimizationRequest) -> OptimizationResponse:
     try:
         return optimize_microgrid(request)
     except OptimizationError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
+        raise HTTPException(status_code=500, detail=str(error)) from error
