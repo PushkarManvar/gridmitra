@@ -39,7 +39,7 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
   - Done when: 24 records, hours 0–23 unique, all values ≥ 0, validates against T2.1 schemas.
   - Cross-check: `[ ]` spot-check 3 rows for load-priority realism and unit suffixes (`_kwh`, `_kw`).
 
-- [ ] **T2.3** Rewrite response schemas per `DATA_CONTRACT.md` §5: `dispatch_hours`, `summary` (§5.2 all fields), `warnings`, `persistence`, and the status enum `optimal | emergency_plan | failed` (§3.1).
+- [x] **T2.3** Rewrite response schemas per `DATA_CONTRACT.md` §5: `dispatch_hours`, `summary` (§5.2 all fields), `warnings`, `persistence`, and the status enum `optimal | emergency_plan | failed` (§3.1).
   - Done when: a response cannot be constructed with a status outside the enum.
   - Cross-check: `[ ]` verify summary includes `p1_unserved_kwh`..`p4_unserved_kwh`, `renewable_curtailment_kwh`, `p1_reliability_percent` (§5.2).
 
@@ -47,27 +47,27 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 3 — Optimizer migration (P: PushkarManvar)
 
-- [ ] **T3.1** Add P1–P4 variables and per-priority `unserved[p,t]` with bounds `0 ≤ unserved ≤ load` (`OPTIMIZATION_MODEL.md` §5, §7.6).
+- [x] **T3.1** Add P1–P4 variables and per-priority `unserved[p,t]` with bounds `0 ≤ unserved ≤ load` (`OPTIMIZATION_MODEL.md` §5, §7.6).
   - Done when: energy-balance uses `total_served_load = Σ(load_p − unserved_p)` (§7.1).
   - Cross-check: `[ ]` confirm unserved exists per priority, not one aggregate.
 
-- [ ] **T3.2** Flip penalty order to **P1 > reserve shortfall > P2 > P3 > P4 > normal costs** (`DECISIONS.md` D003, `OPTIMIZATION_MODEL.md` §6.1).
+- [x] **T3.2** Flip penalty order to **P1 > reserve shortfall > P2 > P3 > P4 > normal costs** (`DECISIONS.md` D003, `OPTIMIZATION_MODEL.md` §6.1).
   - Done when: `models.py` validator enforces the order; root `AGENTS.md` penalty text updated to match.
   - Cross-check: `[ ]` both docs (`AGENTS.md` + `OPTIMIZATION_MODEL.md` §6.1) now agree — this resolves the known conflict.
 
-- [ ] **T3.3** Verify energy-balance equality (not ≥) and renewable limits (`OPTIMIZATION_MODEL.md` §7.1, §7.2). Add derived `renewable_curtailment[t]` output.
+- [x] **T3.3** Verify energy-balance equality (not ≥) and renewable limits (`OPTIMIZATION_MODEL.md` §7.1, §7.2). Add derived `renewable_curtailment[t]` output.
   - Done when: equality holds within `EPSILON = 1e-6`; curtailment = available − used (§7.2).
   - Cross-check: `[ ]` TEST_PLAN §3 tolerance used in all assertions.
 
-- [ ] **T3.4** Verify battery transition, hard bounds, binary charge/discharge mode, and soft reserve with bound `0 ≤ reserve_shortfall ≤ reserve_target` (`OPTIMIZATION_MODEL.md` §7.3, §7.4).
+- [x] **T3.4** Verify battery transition, hard bounds, binary charge/discharge mode, and soft reserve with bound `0 ≤ reserve_shortfall ≤ reserve_target` (`OPTIMIZATION_MODEL.md` §7.3, §7.4).
   - Done when: no hour charges and discharges together; shortfall reported, never infeasible.
   - Cross-check: `[ ]` confirm reserve is **soft** (penalized), not a hard feasibility condition.
 
-- [ ] **T3.5** Check solver status **before** reading decision-variable values (`OPTIMIZATION_MODEL.md` §9).
+- [x] **T3.5** Check solver status **before** reading decision-variable values (`OPTIMIZATION_MODEL.md` §9).
   - Done when: non-optimal status → structured `failed`/`emergency_plan`, never a dispatch from invalid values.
   - Cross-check: `[ ]` TEST_PLAN §8 "Solver failure does not return dispatch values as valid".
 
-- [ ] **T3.6** Unit tests O01–O12 from `TEST_PLAN.md` §4.
+- [x] **T3.6** Unit tests O01–O12 from `TEST_PLAN.md` §4.
   - Done when: `pytest` green in container; includes O06 (P4 before P3 before P2 before P1) and O07 (P1 before reserve).
   - Cross-check: `[ ]` run `docker compose exec backend pytest -q` and confirm all pass.
 
@@ -75,15 +75,15 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 4 — Baseline, metrics, explanations (P: PushkarManvar)
 
-- [ ] **T4.1** Reactive no-lookahead baseline (`OPTIMIZATION_MODEL.md` §8, `DECISIONS.md` D007, `TEST_PLAN.md` §5).
+- [x] **T4.1** Reactive no-lookahead baseline (`OPTIMIZATION_MODEL.md` §8, `DECISIONS.md` D007, `TEST_PLAN.md` §5).
   - Done when: renewables first, battery charges surplus, discharge to hard min, diesel for deficit, P4→P1 reduction; deterministic; **identical inputs** to optimized model.
   - Cross-check: `[ ]` baseline must NOT plan around future demand (§8 item 6).
 
-- [ ] **T4.2** Metrics per `OPTIMIZATION_MODEL.md` §10 (`diesel_fuel_l`, `fuel_cost`, `co2_kg`, `renewable_share_percent`, `p1_reliability_percent`, curtailment) + explicit zero-denominator rule.
+- [x] **T4.2** Metrics per `OPTIMIZATION_MODEL.md` §10 (`diesel_fuel_l`, `fuel_cost`, `co2_kg`, `renewable_share_percent`, `p1_reliability_percent`, curtailment) + explicit zero-denominator rule.
   - Done when: TEST_PLAN §6 metric tests pass, including zero-demand test.
   - Cross-check: `[ ]` every metric has a unit suffix and matches §10 formulas.
 
-- [ ] **T4.3** Explanation rules with `code`, `severity`, `hour_index`, `message`, `evidence` (`DATA_CONTRACT.md` §5.4, warning codes §5.5).
+- [x] **T4.3** Explanation rules with `code`, `severity`, `hour_index`, `message`, `evidence` (`DATA_CONTRACT.md` §5.4, warning codes §5.5).
   - Done when: P1_UNSERVED and RESERVE_SHORTFALL always emitted when non-zero; evidence carries numbers.
   - Cross-check: `[ ]` no LLM — explanations are rule-generated from result values.
 
@@ -137,13 +137,13 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ---
 
-## Conflict log (as of now)
+## Conflict log (as of PR #9 — T2.1–T4.3 migrated)
 
 | Item | Current code | Target docs | Action |
 |---|---|---|---|
-| Load tiers | critical + flexible (2) | P1–P4 (4) | T3.1 |
-| Penalty order | reserve > P1 | P1 > reserve > P2 > P3 > P4 | T3.2 |
-| Status values | `optimal`, `feasible` | `optimal`, `emergency_plan`, `failed` | T2.3 |
-| Response field | `hours` | `dispatch_hours` | T2.3 |
-| Health | `api`, `database` | `api`, `solver`, `database` | T5.1 |
-| Persistence | schema exists, not wired | full workflow + save-failure resilience | T6.x |
+| Load tiers | critical + flexible (2) | P1–P4 (4) | Resolved by T3.1 (PR #9) |
+| Penalty order | reserve > P1 | P1 > reserve > P2 > P3 > P4 | Resolved by T3.2 (PR #9) |
+| Status values | `optimal`, `feasible` | `optimal`, `emergency_plan`, `failed` | Resolved by T2.3 (PR #9) |
+| Response field | `hours` | `dispatch_hours` | Resolved by T2.3 (PR #9) |
+| Health | `api`, `database` | `api`, `solver`, `database` | Resolved in PR #9 (T5.1 remaining: formal tick) |
+| Persistence | schema exists, not wired | full workflow + save-failure resilience | Open — T6.x |
