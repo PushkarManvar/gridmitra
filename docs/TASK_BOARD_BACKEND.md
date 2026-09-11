@@ -23,7 +23,7 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 1 — Mock API (unblocks frontend)
 
-- [ ] **T1.1** Create mock API response file (e.g. `backend/app/data/mock_response.json`) matching `DATA_CONTRACT.md` §5 exactly.
+- [x] **T1.1** Create mock API response file (e.g. `backend/app/data/mock_response.json`) matching `DATA_CONTRACT.md` §5 exactly.
   - Done when: JSON parses against the planned response schema; frontend can render every field.
   - Cross-check: `[ ]` compare field-by-field against `DATA_CONTRACT.md` §5.1–§5.5 (run_id, status, dispatch_hours, summary, baseline_summary, explanations, warnings, persistence).
 
@@ -31,11 +31,11 @@ Cross-check rule (from `docs/TEAM_WORKFLOW.md`): any contract or model change up
 
 ## Phase 2 — Schemas and demo data
 
-- [ ] **T2.1** Rewrite Pydantic request schemas per `DATA_CONTRACT.md` §4 (`scenario_id`, `scenario_name`, `scenario_type`, `site`, `assets`, `operating_policy`, `hours` with `p1..p4_demand_kwh`).
+- [x] **T2.1** Rewrite Pydantic request schemas per `DATA_CONTRACT.md` §4 (`scenario_id`, `scenario_name`, `scenario_type`, `site`, `assets`, `operating_policy`, `hours` with `p1..p4_demand_kwh`).
   - Done when: schemas validate the prepared demo payload; scenario-type enum per §3.2; `interval_hours == 1` enforced.
   - Cross-check: `[ ]` confirm `operating_policy` exposes **only** `carbon_price_per_kg_co2` (§4.7 — no safety penalties).
 
-- [ ] **T2.2** Rewrite `data/demo_scenario.json` to the new contract with realistic P1–P4 values (P4 largest, P1 smallest).
+- [x] **T2.2** Rewrite `data/demo_scenario.json` to the new contract with realistic P1–P4 values (P4 largest, P1 smallest).
   - Done when: 24 records, hours 0–23 unique, all values ≥ 0, validates against T2.1 schemas.
   - Cross-check: `[ ]` spot-check 3 rows for load-priority realism and unit suffixes (`_kwh`, `_kw`).
 

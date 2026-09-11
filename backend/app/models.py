@@ -1,76 +1,121 @@
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class HourInput(BaseModel):
-    hour: int = Field(ge=0, le=23)
-    critical_load_kwh: float = Field(ge=0)
-    flexible_load_kwh: float = Field(ge=0)
-    solar_available_kwh: float = Field(ge=0)
-    wind_available_kwh: float = Field(ge=0)
+class ScenarioType(str, Enum):
+    normal = "normal"
+    cloudy = "cloudy"
+    demand_spike = "demand_spike"
+    high_diesel_price = "high_diesel_price"
+    battery_degradation = "battery_degradation"
+    combined_stress = "combined_stress"
+    custom = "custom"
+
+
+class Site(BaseModel):
+    site_id: str = Field(min_length=1)
+    site_name: str = Field(min_length=1, max_length=100)
+    timezone: str = Field(min_length=1)
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    start_time: str = Field(min_length=1)
+    interval_hours: int
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> "Site":
+        if self.interval_hours != 1:
+            raise ValueError("interval_hours must equal 1 for the MVP")
+        return self
+
+
+class SolarConfig(BaseModel):
+    enabled: bool
+    capacity_kw: float = Field(ge=0)
+
+
+class WindConfig(BaseModel):
+    enabled: bool
+    capacity_kw: float = Field(ge=0)
 
 
 class BatteryConfig(BaseModel):
     capacity_kwh: float = Field(gt=0)
-    initial_soc_kwh: float = Field(ge=0)
-    min_soc_kwh: float = Field(ge=0)
-    max_soc_kwh: float = Field(gt=0)
-    max_charge_kw: float = Field(gt=0)
-    max_discharge_kw: float = Field(gt=0)
+    initial_energy_kwh: float = Field(ge=0)
+    minimum_energy_kwh: float = Field(ge=0)
+    maximum_energy_kwh: float = Field(gt=0)
+    maximum_charge_kw: float = Field(ge=0)
+    maximum_discharge_kw: float = Field(ge=0)
     charge_efficiency: float = Field(gt=0, le=1)
     discharge_efficiency: float = Field(gt=0, le=1)
-    reserve_target_kwh: float = Field(ge=0)
-    throughput_cost_per_kwh: float = Field(ge=0)
+    terminal_reserve_target_kwh: float = Field(ge=0)
+    wear_cost_per_kwh: float = Field(ge=0)
 
     @model_validator(mode="after")
-    def validate_soc_bounds(self) -> "BatteryConfig":
-        if self.max_soc_kwh > self.capacity_kwh:
-            raise ValueError("max_soc_kwh cannot exceed capacity_kwh")
-        if self.min_soc_kwh > self.max_soc_kwh:
-            raise ValueError("min_soc_kwh cannot exceed max_soc_kwh")
-        if not self.min_soc_kwh <= self.initial_soc_kwh <= self.max_soc_kwh:
-            raise ValueError("initial_soc_kwh must be inside the hard SOC bounds")
-        if self.reserve_target_kwh > self.max_soc_kwh:
-            raise ValueError("reserve_target_kwh cannot exceed max_soc_kwh")
+    def validate_energy_bounds(self) -> "BatteryConfig":
+        if self.maximum_energy_kwh > self.capacity_kwh:
+            raise ValueError("maximum_energy_kwh cannot exceed capacity_kwh")
+        if self.minimum_energy_kwh > self.maximum_energy_kwh:
+            raise ValueError("minimum_energy_kwh cannot exceed maximum_energy_kwh")
+        if not self.minimum_energy_kwh <= self.initial_energy_kwh <= self.maximum_energy_kwh:
+            raise ValueError("initial_energy_kwh must be inside the hard energy bounds")
+        if self.terminal_reserve_target_kwh > self.maximum_energy_kwh:
+            raise ValueError("terminal_reserve_target_kwh cannot exceed maximum_energy_kwh")
         return self
 
 
 class DieselConfig(BaseModel):
-    max_power_kw: float = Field(gt=0)
-    cost_per_kwh: float = Field(ge=0)
-    emission_kg_per_kwh: float = Field(ge=0)
+    enabled: bool
+    maximum_kw: float = Field(ge=0)
+    fuel_consumption_l_per_kwh: float = Field(ge=0)
+    fuel_price_per_l: float = Field(ge=0)
+    emission_factor_kg_co2_per_l: float = Field(ge=0)
 
 
-class ObjectiveWeights(BaseModel):
-    carbon_price_per_kg: float = Field(default=0.05, ge=0)
-    flexible_unserved_penalty_per_kwh: float = Field(default=1_000, gt=0)
-    critical_unserved_penalty_per_kwh: float = Field(default=10_000, gt=0)
-    reserve_shortfall_penalty_per_kwh: float = Field(default=12_000, gt=0)
+class Assets(BaseModel):
+    solar: SolarConfig
+    wind: WindConfig
+    battery: BatteryConfig
+    diesel: DieselConfig
 
-    @model_validator(mode="after")
-    def validate_priority_order(self) -> "ObjectiveWeights":
-        if self.critical_unserved_penalty_per_kwh <= self.flexible_unserved_penalty_per_kwh:
-            raise ValueError("critical-load penalty must exceed flexible-load penalty")
-        if self.reserve_shortfall_penalty_per_kwh <= self.critical_unserved_penalty_per_kwh:
-            raise ValueError("reserve-shortfall penalty must exceed critical-load penalty")
-        return self
+
+class OperatingPolicy(BaseModel):
+    carbon_price_per_kg_co2: float = Field(ge=0)
+
+
+class HourInput(BaseModel):
+    hour_index: int = Field(ge=0, le=23)
+    timestamp: str = Field(min_length=1)
+    solar_available_kwh: float = Field(ge=0)
+    wind_available_kwh: float = Field(ge=0)
+    p1_demand_kwh: float = Field(ge=0)
+    p2_demand_kwh: float = Field(ge=0)
+    p3_demand_kwh: float = Field(ge=0)
+    p4_demand_kwh: float = Field(ge=0)
 
 
 class OptimizationRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
+    scenario_id: str = Field(min_length=1)
+    scenario_name: str = Field(min_length=1, max_length=100)
+    scenario_type: ScenarioType
+    site: Site
+    assets: Assets
+    operating_policy: OperatingPolicy
     hours: list[HourInput]
-    battery: BatteryConfig
-    diesel: DieselConfig
-    objective: ObjectiveWeights = Field(default_factory=ObjectiveWeights)
 
     @model_validator(mode="after")
     def validate_hours(self) -> "OptimizationRequest":
         if len(self.hours) != 24:
             raise ValueError("exactly 24 hourly records are required")
-        if sorted(item.hour for item in self.hours) != list(range(24)):
-            raise ValueError("hours must be unique and cover 0 through 23")
+        if sorted(item.hour_index for item in self.hours) != list(range(24)):
+            raise ValueError("hour_index values must be unique and cover 0 through 23")
         return self
+
+
+# ---------------------------------------------------------------------------
+# Response schemas. Status and response-shape migration is task T2.3; the
+# optimizer (T3.x) still constructs these names, so they are preserved here.
+# ---------------------------------------------------------------------------
 
 
 class HourDispatch(BaseModel):
