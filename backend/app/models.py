@@ -1,16 +1,19 @@
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-ScenarioType = Literal[
-    "normal",
-    "cloudy",
-    "demand_spike",
-    "high_diesel_price",
-    "battery_degradation",
-    "combined_stress",
-    "custom",
-]
+
+class ScenarioType(str, Enum):
+    normal = "normal"
+    cloudy = "cloudy"
+    demand_spike = "demand_spike"
+    high_diesel_price = "high_diesel_price"
+    battery_degradation = "battery_degradation"
+    combined_stress = "combined_stress"
+    custom = "custom"
+
+
 Severity = Literal["info", "warning", "critical"]
 RunStatus = Literal["optimal", "emergency_plan", "failed"]
 
