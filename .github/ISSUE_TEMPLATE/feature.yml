@@ -1,0 +1,30 @@
+name: Feature task
+description: A small, testable GridMitra task
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User outcome
+      description: What should the operator be able to do or understand?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: List the observable checks that prove it is done.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend
+        - Backend / optimizer
+        - Data / integration
+        - Documentation
+    validations:
+      required: true

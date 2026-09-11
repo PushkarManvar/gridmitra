@@ -1,0 +1,144 @@
+# GridMitra Technical Decisions
+
+## Decision 001 Modular Monolith
+
+### Decision
+
+Use one React frontend, one FastAPI backend, one pure Python optimizer module and one PostgreSQL database.
+
+### Reason
+
+A three-member team can develop and integrate this architecture within a 30-hour hackathon without the operational overhead of microservices.
+
+### Consequence
+
+Internal module boundaries must remain clear even though the backend is deployed as one service.
+
+## Decision 002 Mixed-Integer Optimization
+
+### Decision
+
+Use PuLP with CBC to implement a mixed-integer linear program.
+
+### Reason
+
+The problem is constrained energy allocation. A binary variable is used to prevent simultaneous battery charging and discharging.
+
+### Consequence
+
+The project describes the engine as optimization-based intelligence rather than a trained machine-learning model.
+
+## Decision 003 Reliability Priority
+
+### Decision
+
+Use the priority order:
+
+```text
+P1 unserved load > terminal reserve shortfall > P2 > P3 > P4
+```
+
+### Reason
+
+Current critical services must not be interrupted only to preserve an end-of-horizon battery target.
+
+### Consequence
+
+Safety penalties remain backend-controlled and are not editable through the frontend.
+
+## Decision 004 Soft Terminal Reserve
+
+### Decision
+
+Represent terminal reserve miss with a non-negative penalized shortfall variable.
+
+### Reason
+
+Stress scenarios should return an explainable emergency plan instead of becoming infeasible only because the reserve target cannot be reached.
+
+### Consequence
+
+The API and UI must report reserve shortfall explicitly.
+
+## Decision 005 Prepared Data First
+
+### Decision
+
+Use committed representative 24-hour data as the primary judge-demo path. Treat live weather as optional.
+
+### Reason
+
+The core optimization demonstration must remain reproducible without internet or API availability.
+
+### Consequence
+
+All prepared data is labelled as simulated unless it comes from a cited source.
+
+## Decision 006 Database Environments
+
+### Decision
+
+Use PostgreSQL 17 in local Docker development and Supabase PostgreSQL for hosted persistence when enabled.
+
+### Reason
+
+This provides fast local setup and a practical hosted path while preserving standard PostgreSQL migrations.
+
+### Consequence
+
+FastAPI owns database access and the optimizer remains database-independent.
+
+## Decision 007 Reactive Baseline
+
+### Decision
+
+Use a renewable-first, battery-next, diesel-next reactive baseline that makes decisions without future planning.
+
+### Reason
+
+The baseline is reproducible, uses the same equipment limits and isolates the value of 24-hour planning.
+
+### Consequence
+
+The baseline must not be described as diesel-first.
+
+## Decision 008 Result Export
+
+### Decision
+
+Require CSV export. Keep PDF export and saved history optional until the core workflow is stable.
+
+### Reason
+
+CSV is fast to implement and preserves all hourly evidence. PDF generation is useful but not necessary to prove the optimizer.
+
+### Consequence
+
+CSV can be generated from the current API response even when database persistence is unavailable.
+
+## Decision 009 Frontend Visualization
+
+### Decision
+
+Use Apache ECharts as the single charting library.
+
+### Reason
+
+One library prevents duplicated patterns and supports dispatch, SOC and comparison charts.
+
+### Consequence
+
+Recharts is not included unless this decision is intentionally revised.
+
+## Decision Change Format
+
+When changing a decision, append a new section containing:
+
+- Date
+- Previous decision
+- New decision
+- Reason
+- Files and contracts affected
+
+Do not silently rewrite a decision after implementation depends on it.
+

@@ -1,0 +1,52 @@
+{
+  "name": "Sunny village baseline",
+  "hours": [
+    {"hour": 0, "critical_load_kwh": 8, "flexible_load_kwh": 3, "solar_available_kwh": 0, "wind_available_kwh": 4},
+    {"hour": 1, "critical_load_kwh": 7, "flexible_load_kwh": 2, "solar_available_kwh": 0, "wind_available_kwh": 4},
+    {"hour": 2, "critical_load_kwh": 7, "flexible_load_kwh": 2, "solar_available_kwh": 0, "wind_available_kwh": 5},
+    {"hour": 3, "critical_load_kwh": 7, "flexible_load_kwh": 2, "solar_available_kwh": 0, "wind_available_kwh": 5},
+    {"hour": 4, "critical_load_kwh": 8, "flexible_load_kwh": 3, "solar_available_kwh": 0, "wind_available_kwh": 4},
+    {"hour": 5, "critical_load_kwh": 10, "flexible_load_kwh": 4, "solar_available_kwh": 1, "wind_available_kwh": 4},
+    {"hour": 6, "critical_load_kwh": 13, "flexible_load_kwh": 5, "solar_available_kwh": 5, "wind_available_kwh": 3},
+    {"hour": 7, "critical_load_kwh": 16, "flexible_load_kwh": 6, "solar_available_kwh": 12, "wind_available_kwh": 3},
+    {"hour": 8, "critical_load_kwh": 18, "flexible_load_kwh": 8, "solar_available_kwh": 22, "wind_available_kwh": 4},
+    {"hour": 9, "critical_load_kwh": 19, "flexible_load_kwh": 9, "solar_available_kwh": 31, "wind_available_kwh": 5},
+    {"hour": 10, "critical_load_kwh": 20, "flexible_load_kwh": 10, "solar_available_kwh": 39, "wind_available_kwh": 5},
+    {"hour": 11, "critical_load_kwh": 21, "flexible_load_kwh": 11, "solar_available_kwh": 45, "wind_available_kwh": 6},
+    {"hour": 12, "critical_load_kwh": 22, "flexible_load_kwh": 12, "solar_available_kwh": 48, "wind_available_kwh": 7},
+    {"hour": 13, "critical_load_kwh": 22, "flexible_load_kwh": 12, "solar_available_kwh": 46, "wind_available_kwh": 7},
+    {"hour": 14, "critical_load_kwh": 21, "flexible_load_kwh": 11, "solar_available_kwh": 40, "wind_available_kwh": 6},
+    {"hour": 15, "critical_load_kwh": 21, "flexible_load_kwh": 10, "solar_available_kwh": 31, "wind_available_kwh": 5},
+    {"hour": 16, "critical_load_kwh": 22, "flexible_load_kwh": 10, "solar_available_kwh": 20, "wind_available_kwh": 5},
+    {"hour": 17, "critical_load_kwh": 25, "flexible_load_kwh": 12, "solar_available_kwh": 9, "wind_available_kwh": 4},
+    {"hour": 18, "critical_load_kwh": 29, "flexible_load_kwh": 13, "solar_available_kwh": 2, "wind_available_kwh": 4},
+    {"hour": 19, "critical_load_kwh": 31, "flexible_load_kwh": 14, "solar_available_kwh": 0, "wind_available_kwh": 5},
+    {"hour": 20, "critical_load_kwh": 28, "flexible_load_kwh": 12, "solar_available_kwh": 0, "wind_available_kwh": 6},
+    {"hour": 21, "critical_load_kwh": 22, "flexible_load_kwh": 9, "solar_available_kwh": 0, "wind_available_kwh": 6},
+    {"hour": 22, "critical_load_kwh": 16, "flexible_load_kwh": 6, "solar_available_kwh": 0, "wind_available_kwh": 5},
+    {"hour": 23, "critical_load_kwh": 11, "flexible_load_kwh": 4, "solar_available_kwh": 0, "wind_available_kwh": 4}
+  ],
+  "battery": {
+    "capacity_kwh": 120,
+    "initial_soc_kwh": 72,
+    "min_soc_kwh": 18,
+    "max_soc_kwh": 108,
+    "max_charge_kw": 28,
+    "max_discharge_kw": 28,
+    "charge_efficiency": 0.95,
+    "discharge_efficiency": 0.94,
+    "reserve_target_kwh": 36,
+    "throughput_cost_per_kwh": 0.02
+  },
+  "diesel": {
+    "max_power_kw": 55,
+    "cost_per_kwh": 0.32,
+    "emission_kg_per_kwh": 0.75
+  },
+  "objective": {
+    "carbon_price_per_kg": 0.05,
+    "flexible_unserved_penalty_per_kwh": 1000,
+    "critical_unserved_penalty_per_kwh": 10000,
+    "reserve_shortfall_penalty_per_kwh": 12000
+  }
+}
