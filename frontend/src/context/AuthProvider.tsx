@@ -11,16 +11,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    getMe()
-      .then((current) => {
+    (async () => {
+      setLoading(true);
+      try {
+        const current = await getMe();
         if (!cancelled) setUser(current);
-      })
-      .catch(() => {
-        // 401: not logged in — that is the expected default state.
-      })
-      .finally(() => {
+      } catch {
+        // No session: sign in with the prepared demo account automatically so the
+        // app opens straight into the workspace (no login page needed offline).
+        try {
+          const demo = await loginUser(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password);
+          if (!cancelled) setUser(demo);
+        } catch {
+          // Backend unreachable; the app stays unauthenticated.
+        }
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

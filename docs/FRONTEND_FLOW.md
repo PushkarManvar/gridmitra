@@ -22,10 +22,7 @@ Load demo community
 
 | Route | Page | MVP priority |
 |---|---|---|
-| `/` | Product landing | Required (public) |
-| `/about` | Problem, solution, architecture, limitations, team | Required (public) |
-| `/login` | Sign-in with one-click demo account | Required (public) |
-| `/select` | Demo and site selection | Required |
+| `/` | Site selection (auto demo sign-in, no login page) | Required |
 | `/overview` | Overview dashboard | Required |
 | `/configuration` | Microgrid configuration | Required |
 | `/forecast` | Forecast and demand | Required |
@@ -35,9 +32,9 @@ Load demo community
 | `/scenario-lab` | Scenario lab | Required |
 | `/impact` | Impact comparison | Required |
 | `/history` | Saved runs | Required |
-| `/documentation` | Documentation | Required (Phase B) |
-| `/settings` | Profile, role, sign out | Required (Phase B) |
-| `/support` | FAQ / support | Required (Phase B) |
+| `/about` | About page | Public |
+
+Standalone landing, login, documentation, settings and support pages were removed after review; the app signs into the prepared demo account automatically and the sidebar links stay on the core workflow.
 
 ## 4 Shared Layout
 
