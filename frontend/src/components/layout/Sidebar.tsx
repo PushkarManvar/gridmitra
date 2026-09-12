@@ -25,7 +25,6 @@ export function Sidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-base font-bold text-primary tracking-tight leading-tight">GridMitra</span>
-            <span className="text-[11px] font-mono text-secondary">Off-Grid Energy OS</span>
           </div>
         </div>
 
