@@ -167,7 +167,6 @@ export function History() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-secondary-fixed">
           <div>
             <h1 className="text-2xl font-bold text-on-surface tracking-tight">Optimization History</h1>
-            <p className="text-xs text-secondary">Runs persisted in the local PostgreSQL database via GET /api/v1/runs. Click a row to open its immutable snapshot.</p>
           </div>
         </div>
 
