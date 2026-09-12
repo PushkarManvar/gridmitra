@@ -7,6 +7,7 @@ export function Sidebar() {
 
   const navItems = [
     { path: "/overview", label: "Overview", icon: "dashboard" },
+    { path: "/scenarios", label: "Scenarios", icon: "folder_open" },
     { path: "/configuration", label: "Microgrid Configuration", icon: "tune" },
     { path: "/forecast", label: "Forecast & Demand", icon: "stacked_line_chart" },
     { path: "/dispatch", label: "Dispatch Planner", icon: "bolt" },

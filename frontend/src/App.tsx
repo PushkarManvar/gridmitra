@@ -12,6 +12,8 @@ import { Dispatch } from "./pages/Dispatch";
 import { ScenarioLab } from "./pages/ScenarioLab";
 import { ImpactComparison } from "./pages/ImpactComparison";
 import { History } from "./pages/History";
+import { Scenarios } from "./pages/Scenarios";
+import { ScenarioEditor } from "./pages/ScenarioEditor";
 
 function AppRoutes() {
   return (
@@ -25,6 +27,8 @@ function AppRoutes() {
             <Route path="/forecast" element={<Forecast />} />
             <Route path="/dispatch" element={<Dispatch />} />
             <Route path="/scenario-lab" element={<ScenarioLab />} />
+            <Route path="/scenarios" element={<Scenarios />} />
+            <Route path="/scenarios/edit" element={<ScenarioEditor />} />
             <Route path="/impact" element={<ImpactComparison />} />
             <Route path="/history" element={<History />} />
             <Route path="*" element={<Navigate to="/overview" replace />} />

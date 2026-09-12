@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GridMitra - Support &amp; System Diagnostics</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-container": "#89cbb7",
+            "on-primary": "#ffffff",
+            "tertiary": "#00395a",
+            "secondary-fixed-dim": "#c9c6bf",
+            "surface-container-highest": "#dce4e1",
+            "surface-container-lowest": "#ffffff",
+            "surface-bright": "#f3fbf8",
+            "surface": "#f3fbf8",
+            "outline": "#6f7975",
+            "surface-container-low": "#edf6f2",
+            "on-primary-fixed": "#002019",
+            "on-tertiary-container": "#7ec4ff",
+            "surface-container-high": "#e1eae6",
+            "on-surface-variant": "#3f4945",
+            "primary-fixed-dim": "#92d3c0",
+            "on-secondary-fixed-variant": "#474741",
+            "surface-tint": "#266959",
+            "on-error": "#ffffff",
+            "on-secondary-container": "#65645e",
+            "on-error-container": "#93000a",
+            "on-tertiary-fixed-variant": "#004b73",
+            "surface-dim": "#d3dcd8",
+            "tertiary-container": "#00517d",
+            "surface-container": "#e7f0ec",
+            "primary-container": "#0d5748",
+            "error-container": "#ffdad6",
+            "on-tertiary-fixed": "#001d31",
+            "inverse-on-surface": "#eaf3ef",
+            "primary-fixed": "#adf0dc",
+            "on-background": "#151d1b",
+            "inverse-surface": "#2a3230",
+            "tertiary-fixed-dim": "#93ccff",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed": "#1c1c17",
+            "on-surface": "#151d1b",
+            "on-primary-fixed-variant": "#015142",
+            "outline-variant": "#bfc9c4",
+            "on-tertiary": "#ffffff",
+            "tertiary-fixed": "#cce5ff",
+            "inverse-primary": "#92d3c0",
+            "secondary-container": "#e5e2da",
+            "primary": "#003e32",
+            "background": "#f3fbf8",
+            "secondary": "#5f5e58",
+            "secondary-fixed": "#e5e2da",
+            "surface-variant": "#dce4e1",
+            "error": "#ba1a1a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "margin-desktop": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1rem",
+            "space-xl": "1.5rem",
+            "margin": "1rem",
+            "space-md": "0.75rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.25rem"
+          },
+          "fontFamily": {
+            "body-sm": ["Geist"],
+            "body-md": ["Geist"],
+            "body-lg": ["Geist"],
+            "display-lg-mobile": ["Geist"],
+            "headline-md": ["Geist"],
+            "label-uppercase": ["Geist"],
+            "metric-mono-md": ["JetBrains Mono"],
+            "code-mono-sm": ["JetBrains Mono"],
+            "headline-sm": ["Geist"],
+            "title-md": ["Geist"],
+            "display-lg": ["Geist"],
+            "metric-mono-lg": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "display-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-uppercase": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "metric-mono-md": ["14px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "code-mono-sm": ["11px", { "lineHeight": "14px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["15px", { "lineHeight": "20px", "fontWeight": "500" }],
+            "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "metric-mono-lg": ["24px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+    /* Calibration details */
+    .border-warm {
+      border-color: #E2DDD2;
+    }
+    .bg-warm-canvas {
+      background-color: #F8F5EE;
+    }
+    .bg-warm-surface {
+      background-color: #F7F4EC;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md flex min-h-screen">
+<!-- FIXED LEFT SIDEBAR (SideNavBar component from JSON) -->
+<aside class="fixed top-0 left-0 h-screen w-60 bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col justify-between p-space-md select-none">
+<div class="flex flex-col gap-y-4">
+<!-- Brand Header -->
+<div class="flex items-center gap-3 px-2 py-1.5 border-b border-outline-variant pb-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex flex-col">
+<span class="text-headline-sm font-headline-sm font-bold text-primary leading-tight">GridMitra</span>
+<span class="text-label-uppercase font-label-uppercase text-secondary tracking-wider text-[10px]">Off-Grid Energy OS</span>
+</div>
+</div>
+<!-- CTA -->
+<div>
+<button class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary-container hover:bg-primary text-on-primary rounded-lg font-title-md text-title-md transition-colors shadow-sm">
+<span class="material-symbols-outlined">play_arrow</span>
+<span>Solve Dispatch</span>
+</button>
+</div>
+<!-- Operational Nav Links -->
+<nav class="flex flex-col gap-1 mt-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">tune</span>
+<span>Microgrid Configuration</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">stacked_line_chart</span>
+<span>Forecast &amp; Demand</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span>Dispatch Planner</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">science</span>
+<span>Scenario Lab</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">compare_arrows</span>
+<span>Impact Comparison</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Optimization History</span>
+</a>
+</nav>
+</div>
+<!-- Footer Nav Items (Support Active) -->
+<div class="flex flex-col gap-1 border-t border-outline-variant pt-3">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-body-md rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<!-- Active 'Support' Item mapping style_active_navigation -->
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-low text-primary font-headline-sm text-body-md rounded-lg ring-1 ring-primary" href="#">
+<span class="material-symbols-outlined fill">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- MAIN OPERATIONAL WORKSPACE (Offset by pl-60 for fixed sidebar) -->
+<div class="pl-60 flex-1 flex flex-col min-h-screen bg-surface-container-lowest pb-12">
+<!-- DOCKED TOP BAR (TopNavBar Component) -->
+<header class="h-14 border-b border-outline-variant bg-surface-container-lowest sticky top-0 z-40 px-space-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-title-md font-title-md text-on-surface-variant">
+<span class="font-headline-sm font-bold text-primary">GridMitra</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface font-semibold">Support</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<!-- Site Selector -->
+<div class="flex items-center gap-2 px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-md text-body-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-[16px]">location_on</span>
+<span class="font-medium">Sunny village baseline</span>
+<span class="material-symbols-outlined text-secondary text-[14px]">expand_more</span>
+</div>
+</div>
+<!-- Trailing Controls & Operator Hub -->
+<div class="flex items-center gap-3">
+<!-- Live Telemetry Synced Pill -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-primary font-code-mono-sm text-code-mono-sm border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Telemetry Synced</span>
+</div>
+<!-- System Ready Pill -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-[#065F46] border border-emerald-200 font-label-uppercase text-label-uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+<span>System Ready</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<button class="p-1.5 text-secondary hover:text-on-surface hover:bg-surface-container rounded-md transition-colors" title="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-1.5 text-primary bg-surface-container-low rounded-md transition-colors" title="Help &amp; Guides">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-2 pl-1">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-body-sm">
+            OP
+          </div>
+</div>
+</div>
+</header>
+<!-- CONTENT CANVAS -->
+<main class="flex-1 p-space-xl space-y-6 max-w-[1600px] w-full mx-auto">
+<!-- PAGE HEADER -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-outline-variant pb-5">
+<div>
+<div class="flex items-center gap-3">
+<h1 class="text-headline-md font-headline-md text-on-surface tracking-tight">Support</h1>
+<span class="px-2 py-0.5 text-label-uppercase font-label-uppercase rounded bg-surface-container text-on-surface-variant border border-outline-variant">Cockpit v2.4</span>
+</div>
+<p class="text-body-md font-body-md text-secondary mt-1">Check system health, resolve common issues and recover your GridMitra demo environment.</p>
+</div>
+<div class="flex items-center gap-2.5">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-warm-surface border border-outline-variant hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+<span>Refresh Status</span>
+</button>
+</div>
+</div>
+<!-- SECTION 1: SYSTEM HEALTH & DIAGNOSTICS (Two column split) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- System Health Card (2 cols wide) -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_1px_2px_rgba(13,87,72,0.03)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant pb-4 mb-4">
+<div>
+<h2 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+<span>System Health</span>
+</h2>
+<p class="text-body-sm font-body-sm text-secondary">Current readiness of the GridMitra application stack and optimization runners.</p>
+</div>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-label-uppercase font-label-uppercase text-[#065F46]">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
+</span>
+<span>SYSTEM READY</span>
+</div>
+</div>
+<!-- Service Health Subcards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+<!-- Service 1 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>FRONTEND</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">Healthy</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">Online</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">Latency: 18ms</span>
+</div>
+<!-- Service 2 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>BACKEND API</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">Healthy</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">Connected</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">REST / WebSocket active</span>
+</div>
+<!-- Service 3 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>OPTIMIZER</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">Ready</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">PuLP / CBC</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">LP-Simplex v2.4</span>
+</div>
+<!-- Service 4 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>DATA STORAGE</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">Healthy</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">Connected</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">IndexedDB + Cache</span>
+</div>
+<!-- Service 5 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>FORECAST SOURCE</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">Connected</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">Live Weather</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">cloud</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">Fallback: Prepared Dataset</span>
+</div>
+<!-- Service 6 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-label-uppercase font-label-uppercase text-secondary mb-1.5">
+<span>24-HOUR DATASET</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-[#065F46] font-semibold">24/24 loaded</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-metric-mono-md text-metric-mono-md text-on-surface">Valid</span>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary text-[10px] block mt-1">Zero missing intervals</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant flex items-center justify-between text-body-sm text-secondary font-body-sm">
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">verified</span>
+              Automated health ping interval: every 30 seconds
+            </span>
+<span class="text-code-mono-sm font-code-mono-sm">Cluster: ap-south-1 • Node 04</span>
+</div>
+</div>
+<!-- Current Diagnostics Panel (1 col wide, Warm Ivory card) -->
+<div class="bg-warm-surface border border-outline-variant rounded-xl p-5 flex flex-col justify-between shadow-[0_1px_2px_rgba(13,87,72,0.03)]">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant pb-3 mb-3">
+<h2 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<span>Current Diagnostics</span>
+</h2>
+<span class="text-label-uppercase font-label-uppercase text-secondary">METADATA</span>
+</div>
+<!-- Diagnostics Key-Value Grid -->
+<div class="space-y-2.5 font-code-mono-sm text-code-mono-sm">
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Site:</span>
+<span class="font-medium text-on-surface">Sunny village baseline</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Scenario:</span>
+<span class="font-medium text-on-surface">Normal Day</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Latest Run:</span>
+<span class="font-medium text-primary">GM-RUN-0248</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Latest Result:</span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-[#065F46] font-semibold text-[10px]">Optimal</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Forecast Records:</span>
+<span class="font-medium text-on-surface">24 / 24</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-secondary-container">
+<span class="text-secondary">Battery Input:</span>
+<span class="font-medium text-on-surface">Valid (Reserve 20%)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Solver:</span>
+<span class="font-medium text-on-surface">Available (0.00% gap)</span>
+</div>
+</div>
+</div>
+<!-- Copy Diagnostics Action -->
+<div class="mt-4 pt-3 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant text-on-surface rounded-lg font-title-md text-title-md transition-colors">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span>Copy Diagnostics</span>
+</button>
+</div>
+</div>
+</div>
+<!-- SECTION 2: TROUBLESHOOTING & FAQS -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+<!-- 1. Quick Troubleshooting Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_1px_2px_rgba(13,87,72,0.03)] space-y-4">
+<div class="flex items-center justify-between border-b border-outline-variant pb-3">
+<h2 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">build</span>
+<span>Quick Troubleshooting</span>
+</h2>
+<span class="text-body-sm font-body-sm text-secondary">6 operational scenarios</span>
+</div>
+<!-- Troubleshooting Item 1 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                1
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Optimization will not start</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">Suggested checks: Validate the 24-hour dataset. Check battery reserve and capacity limits. Verify diesel generator values. Confirm all P1–P4 loads are assigned.</p>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Item 2 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                2
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Forecast data is unavailable</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">GridMitra can automatically switch to the prepared dataset when the live weather source is unavailable or timing out.</p>
+<div class="mt-2.5">
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-warm-surface border border-outline-variant text-body-sm font-title-md text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[15px] text-primary">cached</span>
+<span>Use Prepared Dataset</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Item 3 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                3
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Emergency Plan generated</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">This is not a solver failure. Total physical supply was insufficient to serve all forecast demand, so GridMitra generated the best feasible priority-aware dispatch.</p>
+<div class="mt-2.5">
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface-container-low border border-outline-variant text-body-sm font-title-md text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span>View Emergency Plan</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Item 4 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                4
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Optimization failed</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">A technical or solver problem prevented the run from completing. Usually caused by infeasible manual constraint overrides or numerical divergence.</p>
+<div class="mt-2.5 flex items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary-container text-on-primary text-body-sm font-title-md hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[15px]">refresh</span>
+<span>Retry Optimization</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-warm-surface border border-outline-variant text-body-sm font-title-md text-on-surface hover:bg-surface-container transition-colors">
+<span>Review Inputs</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Item 5 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                5
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">CSV upload rejected</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">Checks: 24 hourly records required • No negative values • Valid time sequence • Required demand columns present (kW, solar_irradiance, wind_mps).</p>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Item 6 -->
+<div class="p-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary font-bold text-body-sm mt-0.5">
+                6
+              </div>
+<div class="flex-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Renewable energy was curtailed</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1">Renewable generation can be curtailed when demand is already satisfied and battery charging capacity is unavailable (SoC maxed or C-rate limit hit).</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Frequently Asked Questions Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_1px_2px_rgba(13,87,72,0.03)] space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant pb-3 mb-2">
+<h2 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">quiz</span>
+<span>Frequently Asked Questions</span>
+</h2>
+<span class="text-body-sm font-body-sm text-secondary">Dispatcher Handbook</span>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- FAQ 1 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Why did GridMitra activate diesel?</span>
+<span class="text-secondary text-body-sm">01</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                Diesel is used when renewable generation and permitted battery discharge cannot satisfy forecast demand.
+              </p>
+</div>
+<!-- FAQ 2 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Why did the battery not discharge?</span>
+<span class="text-secondary text-body-sm">02</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                Battery discharge may be limited to preserve the configured reserve for upcoming critical demand or to avoid exceeding maximum hourly inverter C-rate discharge thresholds.
+              </p>
+</div>
+<!-- FAQ 3 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Why was P4 demand reduced?</span>
+<span class="text-secondary text-body-sm">03</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                Flexible P4 demand is reduced before higher-priority services during a supply shortage to defend Tier 1 lifeline loads.
+              </p>
+</div>
+<!-- FAQ 4 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Can P1 demand ever be reduced?</span>
+<span class="text-secondary text-body-sm">04</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                Yes, but only when total available physical supply is insufficient even after lower-priority demand (P2, P3, P4) has been reduced to zero.
+              </p>
+</div>
+<!-- FAQ 5 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Why is renewable energy curtailed?</span>
+<span class="text-secondary text-body-sm">05</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                Available renewable generation may exceed current demand and battery charging capacity. The grid cannot absorb excess energy without battery headroom.
+              </p>
+</div>
+<!-- FAQ 6 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>What is an Emergency Plan?</span>
+<span class="text-secondary text-body-sm">06</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                A successfully solved dispatch where some demand remains unserved because physical supply is insufficient to satisfy total demand without violating physical constraints.
+              </p>
+</div>
+<!-- FAQ 7 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Does GridMitra directly control the microgrid?</span>
+<span class="text-secondary text-body-sm">07</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                No. GridMitra provides dispatch recommendations for operator review. Human operators maintain operational authority.
+              </p>
+</div>
+<!-- FAQ 8 -->
+<div class="py-3">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold flex items-center justify-between">
+<span>Are explanations generated using AI?</span>
+<span class="text-secondary text-body-sm">08</span>
+</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 leading-relaxed">
+                GridMitra’s MVP explanations are rule-generated from optimization outputs and active constraints, guaranteeing deterministic and auditable operational traces.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: DEMO RECOVERY & REPORT AN ISSUE (Bento layout) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+<!-- 1. Demo Recovery Card (Warm cream surface) -->
+<div class="lg:col-span-5 bg-warm-surface border border-outline-variant rounded-xl p-5 flex flex-col justify-between shadow-[0_1px_2px_rgba(13,87,72,0.03)]">
+<div>
+<div class="flex items-center gap-2 border-b border-outline-variant pb-3 mb-4">
+<span class="material-symbols-outlined text-primary">restart_alt</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">Demo Recovery</h2>
+</div>
+<p class="text-body-md font-body-md text-secondary mb-4 leading-normal">
+              Use these controls if the hackathon demonstration environment becomes inconsistent or modified during testing.
+            </p>
+<!-- Action Buttons Grid -->
+<div class="grid grid-cols-2 gap-2.5 mb-5">
+<button class="px-3 py-2 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant rounded-lg text-body-sm font-title-md text-on-surface transition-colors flex items-center gap-1.5 justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">cloud_download</span>
+<span>Reload Demo Dataset</span>
+</button>
+<button class="px-3 py-2 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant rounded-lg text-body-sm font-title-md text-on-surface transition-colors flex items-center gap-1.5 justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">tune</span>
+<span>Reset Scenario Controls</span>
+</button>
+<button class="px-3 py-2 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant rounded-lg text-body-sm font-title-md text-on-surface transition-colors flex items-center gap-1.5 justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">settings_backup_restore</span>
+<span>Restore Default Config</span>
+</button>
+<button class="px-3 py-2 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant rounded-lg text-body-sm font-title-md text-on-surface transition-colors flex items-center gap-1.5 justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">arrow_back</span>
+<span>Return to Overview</span>
+</button>
+</div>
+</div>
+<div>
+<button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-container hover:bg-primary text-on-primary rounded-lg font-title-md text-title-md transition-colors shadow-sm mb-3">
+<span class="material-symbols-outlined text-[18px]">power_settings_new</span>
+<span>Reset Full Demo Environment</span>
+</button>
+<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant flex items-start gap-2 text-secondary text-body-sm">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">info</span>
+<span>This affects only demonstration data and local application state. Remote solver telemetry remains intact.</span>
+</div>
+</div>
+</div>
+<!-- 2. Report an Issue Card (White Card) -->
+<div class="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_1px_2px_rgba(13,87,72,0.03)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">bug_report</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">Report an Issue</h2>
+</div>
+<span class="text-code-mono-sm font-code-mono-sm text-secondary">ID: TKT-2025-DEV</span>
+</div>
+<!-- Issue Form -->
+<form class="space-y-3.5" onsubmit="event.preventDefault();">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<!-- Dropdown 1: Category -->
+<div>
+<label class="block text-label-uppercase font-label-uppercase text-secondary mb-1">Issue Category</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm font-body-sm text-on-surface p-2 focus:ring-1 focus:ring-primary focus:border-primary">
+<option>UI / Display</option>
+<option>Forecast Data</option>
+<option>Validation</option>
+<option>Optimization</option>
+<option>Scenario Lab</option>
+<option>Export</option>
+<option>Other</option>
+</select>
+</div>
+<!-- Dropdown 2: Page -->
+<div>
+<label class="block text-label-uppercase font-label-uppercase text-secondary mb-1">Page</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm font-body-sm text-on-surface p-2 focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Support</option>
+<option>Overview</option>
+<option>Microgrid Configuration</option>
+<option>Forecast &amp; Demand</option>
+<option>Dispatch Planner</option>
+<option>Scenario Lab</option>
+<option>Impact Comparison</option>
+<option>Optimization History</option>
+<option>Documentation</option>
+<option>Settings</option>
+</select>
+</div>
+</div>
+<!-- Textarea: Description -->
+<div>
+<label class="block text-label-uppercase font-label-uppercase text-secondary mb-1">Description</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm font-body-sm text-on-surface p-2.5 focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Describe what happened, error codes or unexpected dispatch behavior..." rows="3"></textarea>
+</div>
+<!-- Checkbox: Include Diagnostics -->
+<div class="flex items-center gap-2">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4" id="inc-diag" type="checkbox"/>
+<label class="text-body-sm font-body-sm text-on-surface cursor-pointer select-none" for="inc-diag">
+                  Include current diagnostics payload (GM-RUN-0248 &amp; 24/24 sensor cache)
+                </label>
+</div>
+</form>
+</div>
+<div class="pt-4 border-t border-outline-variant mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+<span class="text-code-mono-sm font-code-mono-sm text-secondary">Generates and copies a local diagnostic report for engineering review.</span>
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<button class="px-3.5 py-2 bg-warm-surface hover:bg-surface-container border border-outline-variant text-on-surface rounded-lg font-title-md text-title-md transition-colors" type="button">
+                Clear
+              </button>
+<button class="px-4 py-2 bg-primary-container hover:bg-primary text-on-primary rounded-lg font-title-md text-title-md transition-colors shadow-sm" type="button">
+                Prepare Issue Report
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- BOTTOM BANNER STRIP -->
+<div class="rounded-lg bg-warm-surface border border-outline-variant px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-2 text-body-sm text-secondary font-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+<span class="font-medium text-on-surface">GridMitra is a decision-support system.</span>
+<span>Dispatch recommendations must be reviewed by the operator before use.</span>
+</div>
+<div class="inline-flex items-center gap-2 text-code-mono-sm font-code-mono-sm text-on-surface">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>System Ready</span>
+</div>
+</div>
+</main>
+<!-- FIXED DOCKED SIMPLEX STATUS FOOTER (Footer component from JSON) -->
+<footer class="fixed bottom-0 left-0 w-full h-9 pl-60 z-40 bg-surface-container-low border-t border-outline-variant select-none">
+<div class="flex justify-between items-center px-space-lg w-full h-full text-code-mono-sm font-code-mono-sm">
+<div class="flex items-center gap-4 text-secondary">
+<span class="text-primary font-medium">GridMitra Energy OS</span>
+<span>•</span>
+<span>Demo Environment</span>
+<span>•</span>
+<span class="text-on-surface">Solver: PuLP / CBC</span>
+</div>
+<div class="flex items-center gap-3 text-secondary">
+<span class="text-primary font-medium">Telemetry Synced</span>
+<span>•</span>
+<span>24/24 nodes online</span>
+</div>
+</div>
+</footer>
+</div>
+</body></html>
