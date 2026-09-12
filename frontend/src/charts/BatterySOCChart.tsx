@@ -1,7 +1,7 @@
 import ReactECharts from 'echarts-for-react';
 import { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
-import { DispatchHour } from '../types';
+import type { DispatchHour } from '../types';
 
 export interface BatterySOCChartProps {
   hours: DispatchHour[];
@@ -11,7 +11,7 @@ export interface BatterySOCChartProps {
 
 export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: BatterySOCChartProps) {
   const option = useMemo<EChartsOption>(() => {
-    const xAxisData = hours.map((h) => `${h.hour}:00`);
+    const xAxisData = hours.map((h) => `${h.hour_index}:00`);
 
     return {
       tooltip: {
@@ -45,7 +45,7 @@ export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: Batter
       },
       yAxis: {
         type: 'value',
-        name: 'SOC (kWh)',
+        name: 'Battery energy (kWh)',
         max: capacityKwh,
         nameTextStyle: { color: '#7C8B87', fontFamily: 'Geist, sans-serif', padding: [0, 0, 0, 20] },
         axisLabel: { color: '#7C8B87', fontFamily: 'JetBrains Mono', fontSize: 11 },
@@ -53,21 +53,21 @@ export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: Batter
       },
       series: [
         {
-          name: 'Battery SOC',
+          name: 'Battery energy',
           type: 'line',
           smooth: 0.2,
           symbol: 'none',
-          data: hours.map(h => h.battery_soc_kwh),
+          data: hours.map((h) => h.battery_energy_end_kwh),
           itemStyle: { color: '#0D5748' },
           areaStyle: {
             color: {
               type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
               colorStops: [
                 { offset: 0, color: 'rgba(13, 87, 72, 0.2)' },
-                { offset: 1, color: 'rgba(13, 87, 72, 0.02)' }
-              ]
-            }
-          }
+                { offset: 1, color: 'rgba(13, 87, 72, 0.02)' },
+              ],
+            },
+          },
         },
         {
           name: 'Reserve Target',
@@ -77,9 +77,9 @@ export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: Batter
             symbol: 'none',
             data: [{ yAxis: reserveTargetKwh }],
             lineStyle: { color: '#EA580C', type: 'dashed' },
-            label: { show: false }
+            label: { show: false },
           },
-        }
+        },
       ],
     };
   }, [hours, reserveTargetKwh, capacityKwh]);

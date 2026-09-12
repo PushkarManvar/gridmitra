@@ -1,338 +1,189 @@
+import { useMemo, useState } from "react";
 import { ScenarioComparisonChart } from "../charts/ScenarioComparisonChart";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import type { OptimizationResult, Scenario } from "../types/index";
+
+function applyModifiers(scenario: Scenario, mods: Modifiers): Scenario {
+  const next: Scenario = JSON.parse(JSON.stringify(scenario));
+  const { battery, diesel } = next.assets;
+  next.scenario_type = "custom";
+  next.scenario_name = `Custom (solar ${mods.solar >= 0 ? "+" : ""}${mods.solar}%, demand ${mods.demand >= 0 ? "+" : ""}${mods.demand}%, diesel ${mods.diesel >= 0 ? "+" : ""}${mods.diesel}%)`;
+  for (const hour of next.hours) {
+    hour.solar_available_kwh = Number((hour.solar_available_kwh * (1 + mods.solar / 100)).toFixed(3));
+    hour.wind_available_kwh = Number((hour.wind_available_kwh * (1 + mods.solar / 100)).toFixed(3));
+    for (const p of ["p1_demand_kwh", "p2_demand_kwh", "p3_demand_kwh", "p4_demand_kwh"] as const) {
+      hour[p] = Number((hour[p] * (1 + mods.demand / 100)).toFixed(3));
+    }
+  }
+  diesel.fuel_price_per_l = Number((diesel.fuel_price_per_l * (1 + mods.diesel / 100)).toFixed(3));
+  battery.capacity_kwh = Number((battery.capacity_kwh * (mods.capacity / 100)).toFixed(1));
+  battery.maximum_energy_kwh = Number((battery.maximum_energy_kwh * (mods.capacity / 100)).toFixed(1));
+  battery.minimum_energy_kwh = Number((battery.minimum_energy_kwh * (mods.capacity / 100)).toFixed(1));
+  battery.initial_energy_kwh = Math.min(battery.initial_energy_kwh, battery.maximum_energy_kwh);
+  battery.terminal_reserve_target_kwh = Number((battery.capacity_kwh * (mods.reserve / 100)).toFixed(1));
+  if (battery.terminal_reserve_target_kwh > battery.maximum_energy_kwh) {
+    battery.terminal_reserve_target_kwh = battery.maximum_energy_kwh;
+  }
+  return next;
+}
+
+interface Modifiers {
+  solar: number;
+  demand: number;
+  diesel: number;
+  capacity: number;
+  reserve: number;
+}
+
+function currencySymbol(currency: string): string {
+  if (currency === "INR") return "₹";
+  if (currency === "USD") return "$";
+  if (currency === "EUR") return "€";
+  return "";
+}
 
 export function ScenarioLab() {
-      const navigate = useNavigate();
-      const [solarMod, setSolarMod] = useState(-50);
-      const [demandMod, setDemandMod] = useState(0);
-      const [fuelPriceMod, setFuelPriceMod] = useState(30);
-      const [capacityMod, setCapacityMod] = useState(100);
-      const [reserveFloorMod, setReserveFloorMod] = useState(30);
-      const [preset, setPreset] = useState("Cloudy Day (-50% Solar, +30% Fuel)");
-      const [objectiveWeight, setObjectiveWeight] = useState("Balanced");
+  const { scenario, result, run, loading, error } = useApp();
+  const [mods, setMods] = useState<Modifiers>({ solar: -50, demand: 0, diesel: 30, capacity: 100, reserve: 30 });
+  const [modified, setModified] = useState<OptimizationResult | null>(null);
 
-      const handlePresetChange = (val: string) => {
-        setPreset(val);
-        if (val.includes("Cloudy Day")) {
-          setSolarMod(-50);
-          setFuelPriceMod(30);
-          setDemandMod(0);
-        } else if (val.includes("Normal Day")) {
-          setSolarMod(0);
-          setFuelPriceMod(0);
-          setDemandMod(0);
-        } else if (val.includes("Evening Demand Spike")) {
-          setDemandMod(25);
-          setSolarMod(0);
-          setFuelPriceMod(0);
-        }
-      };
+  const draftScenario = useMemo(() => {
+    if (!scenario) return null;
+    return applyModifiers(scenario, mods);
+  }, [scenario, mods]);
 
-      return (
-        <div className="min-h-screen bg-[#f3fbf8]">
-          
-          <main className="pb-14 min-h-screen bg-[#f3fbf8]">
-            <div className="p-6 max-w-[1720px] mx-auto flex flex-col gap-5">
-              <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
-                <div>
-                  <h1 className="text-2xl font-bold text-primary tracking-tight">Scenario Lab</h1>
-                  <p className="text-xs text-secondary mt-0.5">Stress-test the dispatch plan by altering renewable availability, demand peaks, diesel costs and battery health.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg px-3 py-1.5 text-xs">
-                    <span className="font-mono text-secondary uppercase">BASE:</span>
-                    <span className="font-semibold text-on-surface">Normal Day</span>
-                    <span className="material-symbols-outlined text-[16px] text-secondary">unfold_more</span>
-                  </div>
-                  <button onClick={() => { setSolarMod(0); setDemandMod(0); setFuelPriceMod(0); setCapacityMod(100); setReserveFloorMod(30); }} className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors shadow-xs">
-                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                    <span>Reset Scenario</span>
-                  </button>
-                </div>
-              </div>
+  const set = (key: keyof Modifiers, value: number) => setMods((prev) => ({ ...prev, [key]: value }));
 
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-                <section className="xl:col-span-4 bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-5 shadow-xs flex flex-col gap-4">
-                  <div className="flex items-center justify-between border-b border-outline-variant pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
-                      <h2 className="text-base font-bold text-on-surface">Scenario Controls</h2>
-                    </div>
-                    <span className="text-[11px] font-mono text-secondary bg-[#F7F4EC] px-2 py-0.5 rounded border border-[#E2DDD2]">MODIFIED</span>
-                  </div>
+  if (!scenario || !result) {
+    return (
+      <div className="min-h-screen bg-[#f3fbf8] p-8">
+        <p className="text-sm text-secondary">{error ?? "Loading…"}</p>
+      </div>
+    );
+  }
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-mono uppercase font-semibold text-secondary">SCENARIO PRESET</label>
-                    <select 
-                      value={preset} 
-                      onChange={(e) => handlePresetChange(e.target.value)} 
-                      className="w-full bg-[#F7F4EC] border border-[#E2DDD2] text-on-surface text-xs font-medium rounded-lg px-3 py-2 cursor-pointer"
-                    >
-                      <option>Cloudy Day (-50% Solar, +30% Fuel)</option>
-                      <option>Normal Day (Baseline Reference)</option>
-                      <option>Evening Demand Spike (+25% Load)</option>
-                      <option>High Diesel Price (+60% ₹152/L)</option>
-                      <option>Battery Degradation (-30% Capacity)</option>
-                    </select>
-                  </div>
+  const currency = currencySymbol(scenario.site.currency);
+  const base = result.summary;
+  const target = modified?.summary ?? base;
+  const isModified = modified !== null;
 
-                  <div className="flex flex-col gap-4 border-t border-outline-variant/60 pt-4 text-xs">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-on-surface">Solar Forecast</span>
-                        <span className="font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">{solarMod}%</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="-50" 
-                        max="20" 
-                        value={solarMod} 
-                        onChange={(e) => setSolarMod(Number(e.target.value))} 
-                        className="w-full h-1.5 bg-[#E2DDD2] rounded-lg cursor-pointer accent-amber-600" 
-                      />
-                      <div className="flex justify-between text-[10px] font-mono text-secondary">
-                        <span>-50% (Dense Clouds)</span>
-                        <span>0%</span>
-                        <span>+20% (Peak Sun)</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-on-surface">Community Demand</span>
-                        <span className="font-mono font-bold text-primary bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">{demandMod >= 0 ? `+${demandMod}%` : `${demandMod}%`}</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="-10" 
-                        max="40" 
-                        value={demandMod} 
-                        onChange={(e) => setDemandMod(Number(e.target.value))} 
-                        className="w-full h-1.5 bg-[#E2DDD2] rounded-lg cursor-pointer accent-primary" 
-                      />
-                      <div className="flex justify-between text-[10px] font-mono text-secondary">
-                        <span>-10%</span>
-                        <span>Base Load</span>
-                        <span>+40% (Spike)</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-on-surface">Diesel Fuel Price</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-secondary">₹{Math.round(95 * (1 + fuelPriceMod / 100))}/L</span>
-                          <span className="font-mono font-bold text-orange-700 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">+{fuelPriceMod}%</span>
-                        </div>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="-10" 
-                        max="100" 
-                        value={fuelPriceMod} 
-                        onChange={(e) => setFuelPriceMod(Number(e.target.value))} 
-                        className="w-full h-1.5 bg-[#E2DDD2] rounded-lg cursor-pointer accent-orange-600" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-on-surface">Battery Usable Capacity</span>
-                        <span className="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">{capacityMod}% (120 kWh)</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="50" 
-                        max="100" 
-                        value={capacityMod} 
-                        onChange={(e) => setCapacityMod(Number(e.target.value))} 
-                        className="w-full h-1.5 bg-[#E2DDD2] rounded-lg cursor-pointer accent-blue-600" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-on-surface">Minimum Reserve Floor</span>
-                        <span className="font-mono font-bold text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">{reserveFloorMod}% (36 kWh)</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="20" 
-                        max="50" 
-                        value={reserveFloorMod} 
-                        onChange={(e) => setReserveFloorMod(Number(e.target.value))} 
-                        className="w-full h-1.5 bg-[#E2DDD2] rounded-lg cursor-pointer accent-purple-600" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5 pt-1">
-                      <label className="text-[10px] font-mono uppercase font-semibold text-secondary">OPTIMIZER OBJECTIVE WEIGHTING</label>
-                      <div className="grid grid-cols-3 gap-1 p-1 bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg">
-                        {["Lowest Cost", "Balanced", "Lowest Carbon"].map((mode) => (
-                          <button 
-                            key={mode} 
-                            onClick={() => setObjectiveWeight(mode)} 
-                            className={`text-center py-1 text-xs rounded transition-all ${
-                              objectiveWeight === mode ? "bg-surface-container-lowest text-primary font-bold shadow-xs border border-outline-variant" : "text-secondary hover:text-on-surface"
-                            }`}
-                          >
-                            {mode}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2">
-                    <button onClick={() => alert("PuLP / CBC successfully re-optimized with modified parameters.")} className="w-full flex items-center justify-center gap-2 bg-[#0D5748] hover:bg-primary text-on-primary text-xs font-semibold py-3 px-4 rounded-lg shadow-xs transition-colors">
-                      <span className="material-symbols-outlined text-[18px]">bolt</span>
-                      <span>Re-optimize Scenario</span>
-                    </button>
-                  </div>
-                </section>
-
-                <div className="xl:col-span-8 flex flex-col gap-5">
-                  <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-4 shadow-xs flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-[#E2DDD2] gap-4 md:gap-0">
-                    <div className="flex-1 md:pr-4 flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase font-semibold text-secondary">REFERENCE BASE</span>
-                        <span className="text-xs font-mono text-on-surface font-medium bg-[#F7F4EC] px-2 py-0.5 rounded border border-[#E2DDD2]">Normal Day</span>
-                      </div>
-                      <div className="text-xs text-secondary mt-1">Solar: 100% • Demand: 100% • Fuel: ₹95/L • Battery: 120 kWh</div>
-                    </div>
-                    <div className="flex-1 md:pl-4 flex flex-col gap-1 bg-[#FFFDF9] -my-4 py-4 rounded-r-xl border-l-2 border-l-amber-500">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase font-semibold text-amber-800">ACTIVE SCENARIO TEST</span>
-                        <span className="text-xs font-mono text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{preset.split('(')[0]}</span>
-                      </div>
-                      <div className="text-xs text-amber-900 mt-1">Solar: {100 + solarMod}% • Fuel: ₹{Math.round(95 * (1 + fuelPriceMod / 100))}/L • Floor: {reserveFloorMod}%</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">FUEL COST</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-on-surface">₹8.3k → ₹10.4k</div>
-                      <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-1 py-0.5 rounded self-start mt-1">+25.5%</span>
-                    </div>
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">DIESEL GEN</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-on-surface">312 → 336</div>
-                      <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-1 py-0.5 rounded self-start mt-1">+7.7%</span>
-                    </div>
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">CO₂ EMITTED</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-on-surface">234 → 252 kg</div>
-                      <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-1 py-0.5 rounded self-start mt-1">+7.7%</span>
-                    </div>
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">RENEWABLE %</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-on-surface">65.5% → 48.7%</div>
-                      <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-1 py-0.5 rounded self-start mt-1">-16.8%</span>
-                    </div>
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">P1 RELIABILITY</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-primary">100% → 100%</div>
-                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-1 py-0.5 rounded self-start mt-1">Zero Shed</span>
-                    </div>
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-3 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">ENDING SOC</span>
-                      <div className="mt-1 font-mono text-sm font-bold text-on-surface">34% → 31%</div>
-                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-1 py-0.5 rounded self-start mt-1">&gt;Floor Safe</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-4 shadow-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
-                        <div>
-                          <h3 className="text-sm font-bold text-on-surface">How Dispatch Changes</h3>
-                          <span className="text-xs text-secondary">Midday deficit offset by earlier diesel trigger</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] font-mono">
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs" style={{backgroundColor: "#D9A441"}}></span>Solar</span>
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs" style={{backgroundColor: "#5C7A99"}}></span>Battery</span>
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs" style={{backgroundColor: "#C97A57"}}></span>Diesel</span>
-                        </div>
-                      </div>
-                      <div className="py-3">
-                        <ScenarioComparisonChart color="#D97706" />
-                      </div>
-                      <div className="bg-[#F7F4EC] rounded-lg p-2.5 flex items-center justify-between text-xs text-on-surface">
-                        <span>Diesel start triggered at <strong>17:15</strong> (vs 19:40 baseline).</span>
-                        <span className="font-mono text-secondary">+2.4 hrs run</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-4 shadow-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
-                        <div>
-                          <h3 className="text-sm font-bold text-on-surface">Battery SOC Comparison</h3>
-                          <span className="text-xs text-secondary">24-hour cycle depth against 30% reserve floor</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-[11px] font-mono">
-                          <span className="text-emerald-800">-- Base</span>
-                          <span className="text-blue-700 font-bold">— Scenario</span>
-                        </div>
-                      </div>
-                      <div className="py-3">
-                        <ScenarioComparisonChart color="#0D5748" />
-                      </div>
-                      <div className="bg-[#F7F4EC] rounded-lg p-2.5 flex items-center justify-between text-xs text-on-surface">
-                        <span>Maintains reserve buffer <strong>+1.2 kWh above floor</strong>.</span>
-                        <span className="font-mono text-emerald-800 font-bold">Safe Buffer</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-5 shadow-xs flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
-                        <h3 className="text-sm font-bold text-on-surface">What Changed in This Scenario?</h3>
-                      </div>
-                      <span className="text-[10px] font-mono uppercase font-semibold text-secondary">SOLVER REASONING</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                      <div className="bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg p-3 flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-[10px] shrink-0 border border-outline-variant">1</div>
-                        <p><strong>Lower solar availability</strong> reduced midday renewable surplus and cut total battery charging energy from 86 kWh to 49 kWh.</p>
-                      </div>
-                      <div className="bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg p-3 flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-[10px] shrink-0 border border-outline-variant">2</div>
-                        <p><strong>Battery discharge increased</strong> during the afternoon (14:00–17:00) to delay diesel generator ignition and suppress operating costs.</p>
-                      </div>
-                      <div className="bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg p-3 flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-[10px] shrink-0 border border-outline-variant">3</div>
-                        <p><strong>Higher diesel price (+30%)</strong> shifted simplex weights to prioritize deep battery drawdown before fuel ignition.</p>
-                      </div>
-                      <div className="bg-[#F7F4EC] border border-[#E2DDD2] rounded-lg p-3 flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-surface-container-lowest text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0 border border-emerald-300">4</div>
-                        <p><strong>P1 critical demand remained 100% protected</strong> throughout all 24 hours with zero shed events across health clinic loads.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between pt-2 border-t border-outline-variant/60 gap-3">
-                      <div className="text-xs font-mono text-secondary">PuLP / CBC converged in 1,280 iterations • Gap: 0.00%</div>
-                      <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 bg-surface-container-lowest hover:bg-surface-container text-on-surface text-xs font-semibold px-4 py-2 rounded-lg border border-outline-variant transition-colors shadow-xs">
-                          <span className="material-symbols-outlined text-[18px]">bookmark</span>
-                          <span>Save Scenario</span>
-                        </button>
-                        <button onClick={() => navigate('/impact')} className="flex items-center gap-2 bg-[#0D5748] hover:bg-primary text-on-primary text-xs font-semibold px-5 py-2 rounded-lg shadow-xs transition-colors">
-                          <span>Compare Full Impact</span>
-                          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
-          
-        </div>
-      );
+  const handleReoptimize = () => {
+    if (draftScenario) {
+      void run(draftScenario).then((nextResult) => {
+        if (nextResult) setModified(nextResult);
+      });
     }
+  };
+
+  const diffRows: Array<[string, string, string]> = [
+    ["Diesel energy", `${base.diesel_energy_kwh.toFixed(1)}`, `${target.diesel_energy_kwh.toFixed(1)} kWh`],
+    ["Fuel cost", `${currency}${base.fuel_cost.toFixed(1)}`, `${currency}${target.fuel_cost.toFixed(1)}`],
+    ["CO2", `${base.co2_kg.toFixed(1)}`, `${target.co2_kg.toFixed(1)} kg`],
+    ["Renewable share", `${base.renewable_share_percent.toFixed(1)}%`, `${target.renewable_share_percent.toFixed(1)}%`],
+    ["P1 reliability", `${base.p1_reliability_percent.toFixed(1)}%`, `${target.p1_reliability_percent.toFixed(1)}%`],
+    ["Reserve shortfall", `${base.reserve_shortfall_kwh.toFixed(2)}`, `${target.reserve_shortfall_kwh.toFixed(2)} kWh`],
+  ];
+
+  const slider = (label: string, key: keyof Modifiers, min: number, max: number, unit: string) => (
+    <label className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-on-surface font-medium">{label}</span>
+        <span className="font-mono text-primary">{mods[key] >= 0 ? "+" : ""}{mods[key]}{unit}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={mods[key]}
+        onChange={(event) => set(key, Number(event.target.value))}
+        className="w-full accent-primary"
+      />
+    </label>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#f3fbf8]">
+      <main className="pb-14 min-h-screen bg-[#f3fbf8]">
+        <div className="p-6 max-w-[1720px] mx-auto flex flex-col gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
+            <div>
+              <h1 className="text-2xl font-bold text-primary tracking-tight">Scenario Lab</h1>
+              <p className="text-xs text-secondary mt-0.5">Stress-test the dispatch plan by altering renewable availability, demand peaks, diesel costs and battery health.</p>
+            </div>
+            <button
+              onClick={() => { setMods({ solar: 0, demand: 0, diesel: 0, capacity: 100, reserve: 30 }); setModified(null); }}
+              className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+              <span>Reset Scenario</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+            <section className="xl:col-span-4 bg-surface-container-lowest border border-[#E2DDD2] rounded-xl p-5 shadow-xs flex flex-col gap-5">
+              <h2 className="text-base font-bold text-on-surface">Scenario Controls</h2>
+              {slider("Solar availability", "solar", -50, 20, "%")}
+              {slider("Demand", "demand", -10, 40, "%")}
+              {slider("Diesel price", "diesel", -10, 100, "%")}
+              {slider("Battery capacity", "capacity", 50, 100, "%")}
+              {slider("Reserve target", "reserve", 20, 50, "%")}
+              <button
+                onClick={handleReoptimize}
+                disabled={loading}
+                className="mt-1 flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                <span>{loading ? "Optimizing…" : "Re-optimize"}</span>
+              </button>
+              {error && <p className="text-xs text-error">{error}</p>}
+            </section>
+
+            <section className="xl:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
+                <div>
+                  <h2 className="text-base font-bold text-on-surface">Base vs Modified</h2>
+                  <p className="text-xs text-secondary">
+                    {isModified ? "Comparing the last scenario-lab run against the original demo run." : "Run a modified scenario to compare."}
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono uppercase text-secondary">{isModified ? "Modified result" : "Showing base"}</span>
+              </div>
+
+              {isModified ? (
+                <>
+                  <div className="mt-4">
+                    <ScenarioComparisonChart base={base} modified={target} />
+                  </div>
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full text-xs font-mono">
+                      <thead>
+                        <tr className="text-secondary text-left border-b border-outline-variant">
+                          <th className="py-1.5 pr-2">Metric</th>
+                          <th className="py-1.5 pr-2">Base</th>
+                          <th className="py-1.5">Modified</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {diffRows.map(([label, baseValue, modifiedValue]) => (
+                          <tr key={label} className="border-b border-outline-variant/40">
+                            <td className="py-1.5 pr-2 text-on-surface">{label}</td>
+                            <td className="py-1.5 pr-2 text-secondary">{baseValue}</td>
+                            <td className="py-1.5 text-on-surface font-semibold">{modifiedValue}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <p className="mt-4 text-xs text-secondary">
+                  Adjust the controls on the left and click <strong>Re-optimize</strong>. The original demo scenario stays untouched.
+                </p>
+              )}
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

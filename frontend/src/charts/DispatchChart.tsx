@@ -1,7 +1,7 @@
 import ReactECharts from 'echarts-for-react';
 import { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
-import { DispatchHour } from '../types';
+import type { DispatchHour } from '../types';
 
 export interface DispatchChartProps {
   hours: DispatchHour[];
@@ -9,7 +9,7 @@ export interface DispatchChartProps {
 
 export function DispatchChart({ hours }: DispatchChartProps) {
   const option = useMemo<EChartsOption>(() => {
-    const xAxisData = hours.map((h) => `${h.hour}:00`);
+    const xAxisData = hours.map((h) => `${h.hour_index}:00`);
 
     return {
       tooltip: {
@@ -54,45 +54,45 @@ export function DispatchChart({ hours }: DispatchChartProps) {
           name: 'Solar',
           type: 'bar',
           stack: 'supply',
-          data: hours.map(h => h.solar_used_kwh),
+          data: hours.map((h) => h.solar_used_kwh),
           itemStyle: { color: '#D97706' },
         },
         {
           name: 'Wind',
           type: 'bar',
           stack: 'supply',
-          data: hours.map(h => h.wind_used_kwh),
+          data: hours.map((h) => h.wind_used_kwh),
           itemStyle: { color: '#0284C7' },
         },
         {
           name: 'BESS Discharge',
           type: 'bar',
           stack: 'supply',
-          data: hours.map(h => h.battery_discharge_kwh),
+          data: hours.map((h) => h.battery_discharge_kwh),
           itemStyle: { color: '#2563EB' },
         },
         {
           name: 'Diesel',
           type: 'bar',
           stack: 'supply',
-          data: hours.map(h => h.diesel_kwh),
+          data: hours.map((h) => h.diesel_generation_kwh),
           itemStyle: { color: '#EA580C' },
         },
         {
           name: 'BESS Charge',
           type: 'bar',
           stack: 'demand',
-          data: hours.map(h => -h.battery_charge_kwh), // Negative for charge visual
+          data: hours.map((h) => -h.battery_charge_kwh),
           itemStyle: { color: '#60A5FA' },
         },
         {
-          name: 'Demand',
+          name: 'Served Demand',
           type: 'line',
-          data: hours.map(h => h.solar_used_kwh + h.wind_used_kwh + h.diesel_kwh + h.battery_discharge_kwh - h.battery_charge_kwh),
+          data: hours.map((h) => h.p1_served_kwh + h.p2_served_kwh + h.p3_served_kwh + h.p4_served_kwh),
           itemStyle: { color: '#1A2220' },
           symbol: 'none',
           smooth: 0.2,
-        }
+        },
       ],
     };
   }, [hours]);

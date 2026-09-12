@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AppProvider } from "./context/AppProvider";
 import { AppShell } from "./components/layout/AppShell";
 import { SiteSelection } from "./pages/SiteSelection";
 import { Overview } from "./pages/Overview";
@@ -11,20 +12,22 @@ import { History } from "./pages/History";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<SiteSelection />} />
-        <Route element={<AppShell />}>
-          <Route path="/overview" element={<Overview />} />
-          <Route path="/configuration" element={<Configuration />} />
-          <Route path="/forecast" element={<Forecast />} />
-          <Route path="/dispatch" element={<Dispatch />} />
-          <Route path="/scenario-lab" element={<ScenarioLab />} />
-          <Route path="/impact" element={<ImpactComparison />} />
-          <Route path="/history" element={<History />} />
-          <Route path="*" element={<Navigate to="/overview" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AppProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<SiteSelection />} />
+          <Route element={<AppShell />}>
+            <Route path="/overview" element={<Overview />} />
+            <Route path="/configuration" element={<Configuration />} />
+            <Route path="/forecast" element={<Forecast />} />
+            <Route path="/dispatch" element={<Dispatch />} />
+            <Route path="/scenario-lab" element={<ScenarioLab />} />
+            <Route path="/impact" element={<ImpactComparison />} />
+            <Route path="/history" element={<History />} />
+            <Route path="*" element={<Navigate to="/overview" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AppProvider>
   );
 }

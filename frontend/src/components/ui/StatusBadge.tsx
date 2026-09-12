@@ -1,7 +1,7 @@
 import { RunStatus } from "../../types";
 
 export interface StatusBadgeProps {
-  status: RunStatus | "system_ready";
+  status: RunStatus | "system_ready" | "draft" | "validating" | "running";
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
