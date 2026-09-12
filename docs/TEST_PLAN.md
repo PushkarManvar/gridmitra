@@ -177,6 +177,15 @@ Validation errors must contain stable field paths.
 - Solver failure does not return dispatch values as valid.
 - Database failure returns the calculated plan with `persistence.saved = false`.
 - Unknown saved run returns `404 RUN_NOT_FOUND`.
+- Weather forecast returns 24 hours with valid solar/wind/cloud values for a mocked successful provider.
+- Weather provider failure returns `503 WEATHER_UNAVAILABLE` (or `cached`) and never fails optimization.
+
+## 8a Weather Unit Tests
+
+- Solar conversion: `capacity × irradiance/1000 × derating × interval`, clamped to `[0, capacity]` (documented example: 60 kW × 0.8 × 0.85 × 1 h = 40.8 kWh).
+- Wind power curve: zero below cut-in and at/above cut-out, capacity at rated speed, cubic interpolation between cut-in and rated.
+- `transform_weather_to_energy` produces exactly 24 records with matching timestamps and units.
+- Endpoint rejects invalid latitude/longitude with 422.
 
 ## 9 Frontend Tests
 

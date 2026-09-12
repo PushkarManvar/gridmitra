@@ -139,6 +139,41 @@ Unknown `run_id` returns HTTP `404` with:
 }
 ```
 
+## `GET /api/v1/weather/forecast`
+
+Optional live-weather source. FastAPI calls Open-Meteo (no API key for non-commercial use), converts irradiance/wind into 24 hourly solar/wind availability records, and never lets the optimizer call the weather provider directly.
+
+Query parameters:
+
+- `latitude` (−90..90), `longitude` (−180..180) — required.
+- `solar_capacity_kw`, `wind_capacity_kw` — required.
+- `panel_tilt_degrees` (0..90), `panel_azimuth_degrees` (−180..180) — required (0° = south in Open-Meteo).
+- `solar_derating_factor` (0..1, default 0.85) — documented demo assumption.
+
+Response:
+
+```json
+{
+  "source": "live | cached | prepared_fallback",
+  "provider": "open_meteo",
+  "timezone": "string | null",
+  "hours": [
+    {
+      "hour_index": 10,
+      "timestamp": "2026-09-12T10:00",
+      "solar_available_kwh": 40.8,
+      "wind_available_kwh": 2.4,
+      "cloud_cover_percent": 27
+    }
+  ],
+  "warnings": []
+}
+```
+
+- `source` `live` = fetched now; `cached` = last successful response for the location; `prepared_fallback` = provider down, no cache.
+- Provider failure with no cache returns HTTP `503` `{"error": {"code": "WEATHER_UNAVAILABLE", "message": "Live weather is unavailable. Use prepared data."}}`. A failed weather fetch never fails optimization.
+- Demand values are not returned — weather does not provide community P1–P4 demand.
+
 ## Error responses
 
 ### Validation failure — HTTP 422
@@ -177,6 +212,7 @@ Implemented:
 - `POST /api/v1/optimize/export` renders the run as CSV from the response body, independent of database state.
 - Ordered SQL migrations under `db/migrations/`, applied at backend startup (`gridmitra.schema_migrations` tracks applied files).
 - `GET /api/v1/runs` and `GET /api/v1/runs/{run_id}` for persisted run history.
+- `GET /api/v1/weather/forecast` for optional live weather (Open-Meteo), with `live`/`cached`/`prepared_fallback` sources and `WEATHER_UNAVAILABLE` on provider failure.
 
 Planned (not yet implemented):
 
