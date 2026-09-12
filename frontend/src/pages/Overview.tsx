@@ -71,10 +71,6 @@ export function Overview() {
 
         <section className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#F7F4EC] border border-secondary-fixed rounded-xl text-xs">
           <div className="flex flex-wrap items-center gap-6">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] text-[10px] font-mono font-bold uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-              Prepared demo data
-            </span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-secondary uppercase font-semibold text-[10px]">SCENARIO</span>
               <span className="font-semibold text-on-surface">{scenario.scenario_name}</span>
@@ -85,10 +81,6 @@ export function Overview() {
               <span className="font-semibold text-on-surface">Next 24 Hours</span>
             </div>
             <div className="h-3 w-px bg-outline-variant" />
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-secondary uppercase font-semibold text-[10px]">RUN</span>
-              <span className="font-mono text-on-surface font-medium">{result.run_id.slice(0, 8)}</span>
-            </div>
           </div>
         </section>
 
