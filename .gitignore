@@ -32,3 +32,6 @@ htmlcov/
 *.log
 *.sqlite3
 generated-reports/
+
+# Graphify knowledge graph output (local only)
+graphify-out/
