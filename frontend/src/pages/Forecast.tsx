@@ -152,7 +152,6 @@ export function Forecast() {
           <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-on-surface">Live weather source</h2>
-              <span className="text-[10px] font-mono text-secondary">Open-Meteo · no API key required</span>
             </div>
             <div className="flex flex-wrap items-end gap-4">
               {locationInput("Latitude", lat, setLat, "°")}
