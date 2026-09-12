@@ -66,6 +66,20 @@ Expected service URLs:
 | Database schema did not rerun | For disposable local data only: `docker compose down -v`, then start again. This deletes the local database volume. |
 | Frontend cannot call API | Confirm `VITE_API_URL=http://localhost:8000` and backend health. |
 
+## Firebase Auth activation (Decision 015)
+
+The app already signs in with Firebase (Google + email/password) and attaches the ID token. To activate **backend verification** (real per-user ownership):
+
+1. **Firebase console** → project `gridmitra` → Authentication → Sign-in method → enable **Google** and **Email/Password**.
+2. **Authorized domains** (Authentication → Settings) → add `localhost`.
+3. **Project settings → Service accounts** → *Generate new private key* → downloads a JSON file.
+4. In the backend environment (`.env` or the host), set either:
+   - `FIREBASE_SERVICE_ACCOUNT_JSON` to the full JSON string, or
+   - `FIREBASE_SERVICE_ACCOUNT_PATH` to the file path.
+5. Restart the backend: `docker compose restart backend`.
+
+Until then, requests without a valid token use the demo owner and the offline demo keeps working. The service-account JSON is a secret — never commit it.
+
 ## Hosted deployment database
 
 Local development uses PostgreSQL 17. Hosted deployment uses Supabase PostgreSQL with the same migrations.
