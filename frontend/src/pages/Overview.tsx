@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { EnergyOutlookChart } from "../charts/EnergyOutlookChart";
 import { useApp } from "../context/AppContext";
 import { PersistenceNotice } from "../components/ui/PersistenceNotice";
-import { StatusBadge } from "../components/ui/StatusBadge";
 import { WarningPanel } from "../components/ui/WarningPanel";
 
 function currencySymbol(currency: string): string {
@@ -89,7 +88,6 @@ export function Overview() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-secondary uppercase font-semibold text-[10px]">RUN</span>
               <span className="font-mono text-on-surface font-medium">{result.run_id.slice(0, 8)}</span>
-              <StatusBadge status={result.status} />
             </div>
           </div>
         </section>

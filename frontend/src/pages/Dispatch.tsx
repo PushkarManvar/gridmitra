@@ -3,7 +3,6 @@ import { DispatchChart } from "../charts/DispatchChart";
 import { BatterySOCChart } from "../charts/BatterySOCChart";
 import { useApp } from "../context/AppContext";
 import { PersistenceNotice } from "../components/ui/PersistenceNotice";
-import { StatusBadge } from "../components/ui/StatusBadge";
 import { WarningPanel } from "../components/ui/WarningPanel";
 import { exportCsv } from "../lib/api";
 import type { BatteryConfig, DispatchHour, OptimizationSummary } from "../types/index";
@@ -173,7 +172,6 @@ export function Dispatch() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-bold text-primary">Dispatch Planner</h1>
-                <StatusBadge status={result.status} />
               </div>
               <p className="text-xs text-secondary mt-1">
                 Optimized 24-hour energy allocation. Run <span className="font-mono">{result.run_id.slice(0, 8)}</span> · Scenario: {scenario.scenario_name}.

@@ -1,10 +1,9 @@
 import { useLocation } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { StatusBadge } from "../ui/StatusBadge";
 
 export function TopBar() {
   const location = useLocation();
-  const { scenario, result, loading } = useApp();
+  const { scenario } = useApp();
   const currentPath = location.pathname;
 
   let currentSection = "Overview";
@@ -16,7 +15,6 @@ export function TopBar() {
   if (currentPath === "/history") currentSection = "Optimization History";
 
   const currentDetail = scenario?.scenario_name ?? "Demo Community";
-  const runStatus = result?.status ?? (loading ? "validating" : "system_ready");
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 pl-60 bg-surface-container-lowest border-b border-outline-variant z-40 flex items-center justify-between px-6">
@@ -31,7 +29,6 @@ export function TopBar() {
           <span className="material-symbols-outlined text-[15px] text-primary">location_on</span>
           <span>{currentDetail}</span>
         </button>
-        <StatusBadge status={runStatus} />
       </div>
     </header>
   );
