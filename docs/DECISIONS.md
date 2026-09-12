@@ -130,6 +130,22 @@ One library prevents duplicated patterns and supports dispatch, SOC and comparis
 
 Recharts is not included unless this decision is intentionally revised.
 
+## Decision 010 Local-Only Database for the Hackathon
+
+### Decision
+
+Use local PostgreSQL 17 (Docker Compose) as the only database through the hackathon. Do not provision hosted Supabase before the demo.
+
+### Reason
+
+The demo must run offline from prepared data. A hosted database adds credentials, provisioning time and an internet failure point for no judging benefit. The migrations already run unchanged on either environment, so hosting can be adopted later without rework.
+
+### Consequence
+
+- No Supabase project is required for the MVP.
+- `db/migrations/` stays the single source of truth for both local and any future hosted environment.
+- If hosted Supabase is used later, `gridmitra` stays private from the Data API unless grants and RLS are added and tested.
+
 ## Decision Change Format
 
 When changing a decision, append a new section containing:
