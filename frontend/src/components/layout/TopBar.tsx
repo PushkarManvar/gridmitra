@@ -1,14 +1,11 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
-import { SignInModal } from "../SignInModal";
 
 export function TopBar() {
   const location = useLocation();
   const { scenario } = useApp();
   const { user, signOut } = useAuth();
-  const [signInOpen, setSignInOpen] = useState(false);
   const currentPath = location.pathname;
 
   let currentSection = "Overview";
@@ -52,17 +49,15 @@ export function TopBar() {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setSignInOpen(true)}
+          <Link
+            to="/login"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-colors"
           >
             <span className="material-symbols-outlined text-[15px]">login</span>
             <span>Sign in</span>
-          </button>
+          </Link>
         )}
       </div>
-
-      {signInOpen && <SignInModal onClose={() => setSignInOpen(false)} />}
     </header>
   );
 }

@@ -14,13 +14,21 @@ import { History } from "./pages/History";
 import { Scenarios } from "./pages/Scenarios";
 import { ScenarioEditor } from "./pages/ScenarioEditor";
 import { Login } from "./pages/Login";
+import { useAuth } from "./context/AuthContext";
+
+function LoginRoute() {
+  const { user, ready } = useAuth();
+  if (!ready) return null;
+  if (user) return <Navigate to="/overview" replace />;
+  return <Login />;
+}
 
 function AppRoutes() {
   return (
     <BrowserRouter>
       <AppProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<LoginRoute />} />
           <Route path="/about" element={<About />} />
           <Route element={<Outlet />}>
             <Route path="/" element={<SiteSelection />} />

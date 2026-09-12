@@ -1,10 +1,33 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { updateProfile } from "firebase/auth";
 
+import { useAuth } from "../context/AuthContext";
+import { auth } from "../lib/firebase";
 import heroBg from "../assets/hero-bg.jpg";
+
+const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
+  "auth/invalid-credential": "Invalid email or password. Check your credentials and try again.",
+  "auth/user-not-found": "No account found with this email. Sign up first.",
+  "auth/wrong-password": "Incorrect password. Try again or reset your password.",
+  "auth/invalid-email": "Enter a valid email address.",
+  "auth/email-already-in-use": "An account already exists for this email. Sign in instead.",
+  "auth/weak-password": "Password is too weak. Use at least 6 characters.",
+  "auth/popup-closed-by-user": "Google sign-in was cancelled.",
+  "auth/network-request-failed": "Network error. Check your internet connection and try again.",
+};
+
+function firebaseErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "code" in error) {
+    const code = String((error as { code: string }).code);
+    return FIREBASE_ERROR_MESSAGES[code] ?? "Authentication failed. Try again.";
+  }
+  return "Authentication failed. Try again.";
+}
 
 export function Login() {
   const navigate = useNavigate();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,19 +49,36 @@ export function Login() {
 
   const [aboutOpen, setAboutOpen] = useState(false);
 
-  const handleSignIn = (e: FormEvent) => {
+  const handleGoogle = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      setSuccessMessage("Sign in successful! Entering workspace...");
+      setTimeout(() => navigate("/overview"), 700);
+    } catch (caught) {
+      setError(firebaseErrorMessage(caught));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
-    // UI-only behavior as requested
-    setTimeout(() => {
+    try {
+      await signInWithEmail(signInEmail, signInPassword);
       setSuccessMessage("Sign in successful! Entering workspace...");
-      setTimeout(() => navigate("/overview"), 1500);
-    }, 700);
+      setTimeout(() => navigate("/overview"), 700);
+    } catch (caught) {
+      setError(firebaseErrorMessage(caught));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = (e: FormEvent) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     if (signUpPassword !== signUpConfirm) {
       setError("Passwords do not match.");
@@ -50,12 +90,19 @@ export function Login() {
     }
     setLoading(true);
     setError(null);
-
-    // UI-only behavior as requested
-    setTimeout(() => {
+    try {
+      await signUpWithEmail(signUpEmail, signUpPassword);
+      if (signUpName.trim()) {
+        const current = auth.currentUser;
+        if (current) await updateProfile(current, { displayName: signUpName.trim() });
+      }
       setSuccessMessage("Account created successfully! Preparing workspace...");
-      setTimeout(() => navigate("/overview"), 1500);
-    }, 700);
+      setTimeout(() => navigate("/overview"), 700);
+    } catch (caught) {
+      setError(firebaseErrorMessage(caught));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -136,6 +183,20 @@ export function Login() {
                 {/* Sign In Form */}
                 {activeTab === "signin" && (
                   <form className="flex flex-col gap-3" onSubmit={handleSignIn}>
+                    <button
+                      type="button"
+                      onClick={() => void handleGoogle()}
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white border border-[#E5E0D8] hover:bg-[#F5F1E9] transition-colors text-neutral-700 font-medium text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <span className="text-sm">G</span>
+                      <span>Continue with Google</span>
+                    </button>
+                    <div className="flex items-center gap-3 my-0.5">
+                      <div className="h-px flex-1 bg-[#E5E0D8]" />
+                      <span className="text-[10px] font-mono uppercase text-neutral-500">or</span>
+                      <div className="h-px flex-1 bg-[#E5E0D8]" />
+                    </div>
                     <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Email Address</label>
                       <input 
