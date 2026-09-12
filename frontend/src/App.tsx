@@ -14,6 +14,9 @@ import { History } from "./pages/History";
 import { Scenarios } from "./pages/Scenarios";
 import { ScenarioEditor } from "./pages/ScenarioEditor";
 import { Login } from "./pages/Login";
+import { Documents } from "./pages/Documents";
+import { Support } from "./pages/Support";
+import { Settings } from "./pages/Settings";
 
 function AppRoutes() {
   return (
@@ -34,6 +37,9 @@ function AppRoutes() {
               <Route path="/scenarios/edit" element={<ScenarioEditor />} />
               <Route path="/impact" element={<ImpactComparison />} />
               <Route path="/history" element={<History />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/overview" replace />} />
             </Route>
           </Route>

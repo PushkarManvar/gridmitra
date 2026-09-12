@@ -14,6 +14,9 @@ export function Sidebar() {
     { path: "/scenario-lab", label: "Scenario Lab", icon: "science" },
     { path: "/impact", label: "Impact Comparison", icon: "compare_arrows" },
     { path: "/history", label: "Optimization History", icon: "history" },
+    { path: "/documents", label: "Documents", icon: "description" },
+    { path: "/support", label: "Support", icon: "help" },
+    { path: "/settings", label: "Settings", icon: "settings" },
   ];
 
   return (

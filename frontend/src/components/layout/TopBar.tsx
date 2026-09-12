@@ -18,6 +18,9 @@ export function TopBar() {
   if (currentPath === "/scenario-lab") currentSection = "Scenario Lab";
   if (currentPath === "/impact") currentSection = "Impact Comparison";
   if (currentPath === "/history") currentSection = "Optimization History";
+  if (currentPath === "/documents") currentSection = "Documents";
+  if (currentPath === "/support") currentSection = "Support Center";
+  if (currentPath === "/settings") currentSection = "Settings";
 
   const currentDetail = scenario?.scenario_name ?? "Demo Community";
 
