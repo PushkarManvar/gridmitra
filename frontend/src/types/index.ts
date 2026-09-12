@@ -195,3 +195,21 @@ export interface RunListItem {
   created_at: string;
   summary: OptimizationSummary;
 }
+
+export interface RunDetail {
+  run_id: string;
+  scenario_id: string | null;
+  scenario_name: string | null;
+  scenario_type: string | null;
+  status: RunStatus;
+  solver_name: string;
+  solver_status: string;
+  model_version: string;
+  input_snapshot: Scenario;
+  persistence_warning: string | null;
+  created_at: string;
+  summary: OptimizationSummary;
+  baseline_summary: OptimizationSummary;
+  dispatch_hours: DispatchHour[];
+  explanations: Explanation[];
+}

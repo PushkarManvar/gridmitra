@@ -358,6 +358,7 @@ async def get_run(run_id: str) -> dict | None:
             "solver_name": mapping["solver_name"],
             "solver_status": mapping["solver_status"],
             "model_version": mapping["model_version"],
+            "input_snapshot": _decode_json(mapping["input_snapshot"]),
             "persistence_warning": mapping["persistence_warning"],
             "created_at": mapping["created_at"],
             "summary": _decode_json(mapping["summary"]),

@@ -1,5 +1,6 @@
 import type {
   OptimizationResult,
+  RunDetail,
   RunListItem,
   Scenario,
 } from "../types/index";
@@ -30,6 +31,10 @@ export function optimizeScenario(scenario: Scenario): Promise<OptimizationResult
 export async function getRuns(): Promise<RunListItem[]> {
   const payload = await request<{ runs: RunListItem[] }>("/api/v1/runs");
   return payload.runs;
+}
+
+export async function getRun(runId: string): Promise<RunDetail> {
+  return request<RunDetail>(`/api/v1/runs/${runId}`);
 }
 
 export async function exportCsv(result: OptimizationResult): Promise<void> {

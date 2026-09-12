@@ -15,14 +15,36 @@ function currencySymbol(currency: string): string {
 }
 
 export function Dispatch() {
-  const { scenario, result, loading, error } = useApp();
+  const { scenario, result, loading, error, run } = useApp();
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  if (!scenario || !result) {
+  if (!scenario) {
     return (
       <div className="min-h-screen bg-surface-container-lowest p-8">
         <p className="text-sm text-secondary">{error ?? "Loading…"}</p>
+      </div>
+    );
+  }
+
+  if (!result) {
+    return (
+      <div className="min-h-screen bg-surface-container-lowest p-8">
+        <div className="max-w-md mx-auto bg-surface-container-low border border-outline-variant rounded-xl p-6 text-center">
+          <span className="material-symbols-outlined text-primary text-[32px] block mx-auto mb-2">bolt</span>
+          <h2 className="text-lg font-bold text-on-surface">No plan yet</h2>
+          <p className="text-sm text-secondary mt-2">
+            Run the 24-hour optimization to generate the dispatch plan for the loaded community.
+          </p>
+          <button
+            onClick={() => void run(scenario)}
+            disabled={loading}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors disabled:opacity-60"
+          >
+            <span className="material-symbols-outlined text-[18px]">bolt</span>
+            <span>{loading ? "Optimizing…" : "Run Optimization"}</span>
+          </button>
+        </div>
       </div>
     );
   }

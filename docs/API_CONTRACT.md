@@ -129,7 +129,7 @@ Lists persisted optimization runs, newest first.
 
 ## `GET /api/v1/runs/{run_id}`
 
-Returns a persisted run: `run_id`, `scenario_id`, `scenario_name`, `scenario_type`, `status`, `created_at`, `summary`, `baseline_summary`, 24 `dispatch_hours`, and `explanations`.
+Returns a persisted run: `run_id`, `scenario_id`, `scenario_name`, `scenario_type`, `status`, `created_at`, `summary`, `baseline_summary`, 24 `dispatch_hours`, `explanations`, and `input_snapshot` (the exact validated scenario the run was computed from, so a historical viewer never mixes an old result with current inputs).
 
 Unknown `run_id` returns HTTP `404` with:
 

@@ -71,7 +71,8 @@ Say:
 Action:
 
 - Select an hour where diesel or battery behaviour is meaningful.
-- Open `Explain This Hour`.
+- Click `Explain` on that row in the hourly table — the explanation panel opens beside the dispatch charts.
+- Point at the prepared-data badge on the Overview banner to confirm the run uses committed demo inputs.
 
 Say:
 

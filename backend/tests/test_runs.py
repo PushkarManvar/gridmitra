@@ -36,6 +36,10 @@ def test_get_run_round_trip() -> None:
     assert len(body["dispatch_hours"]) == 24
     assert body["dispatch_hours"][0]["hour_index"] == 0
     assert len(body["explanations"]) == len(payload["explanations"])
+    # The immutable input snapshot lets a historical viewer render the run with
+    # the exact inputs it was computed from (A5), not the current scenario.
+    assert body["input_snapshot"]["scenario_id"] == scenario["scenario_id"]
+    assert len(body["input_snapshot"]["hours"]) == 24
 
 
 def test_unknown_run_returns_404() -> None:
