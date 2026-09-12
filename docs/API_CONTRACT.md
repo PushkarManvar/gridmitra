@@ -48,7 +48,7 @@ Invalid input is rejected with HTTP 422 before any solver runs.
 
 ```json
 {
-  "run_id": "run_...",
+  "run_id": "<uuid>",
   "status": "optimal | emergency_plan | failed",
   "scenario_id": "demo-normal-001",
   "summary": {},
@@ -59,6 +59,8 @@ Invalid input is rejected with HTTP 422 before any solver runs.
   "persistence": {}
 }
 ```
+
+- `run_id`: server-generated UUID string. It is also the database primary key of the persisted run and the CSV filename.
 
 - `status`: normalized solver outcome only. Raw CBC strings are never exposed.
   - `optimal`: solved to optimality with no P1 or terminal-reserve violation.
@@ -97,6 +99,40 @@ Response:
   - `explanations` rows (code, severity, hour_index, message).
   - `warnings` rows (code, severity, hour_index, message).
 
+## `GET /api/v1/runs`
+
+Lists persisted optimization runs, newest first.
+
+```json
+{
+  "runs": [
+    {
+      "run_id": "string",
+      "scenario_id": "string",
+      "scenario_name": "string",
+      "scenario_type": "string",
+      "status": "optimal | emergency_plan | failed",
+      "created_at": "ISO 8601",
+      "summary": {}
+    }
+  ]
+}
+```
+
+`summary` is the full `DATA_CONTRACT.md` §5.2 object for each run.
+
+## `GET /api/v1/runs/{run_id}`
+
+Returns a persisted run: `run_id`, `scenario_id`, `scenario_name`, `scenario_type`, `status`, `created_at`, `summary`, `baseline_summary`, 24 `dispatch_hours`, and `explanations`.
+
+Unknown `run_id` returns HTTP `404` with:
+
+```json
+{
+  "error": { "code": "RUN_NOT_FOUND", "message": "Run {run_id} not found." }
+}
+```
+
 ## Error responses
 
 ### Validation failure — HTTP 422
@@ -134,7 +170,8 @@ Implemented:
 - Consistent 422 error object (`error.code`, `error.message`, `error.fields[]` with stable paths) for validation failures.
 - `POST /api/v1/optimize/export` renders the run as CSV from the response body, independent of database state.
 - Ordered SQL migrations under `db/migrations/`, applied at backend startup (`gridmitra.schema_migrations` tracks applied files).
+- `GET /api/v1/runs` and `GET /api/v1/runs/{run_id}` for persisted run history.
 
 Planned (not yet implemented):
 
-- `GET /api/v1/runs` and `GET /api/v1/runs/{id}/export` for persisted run history.
+- Nothing in the MVP-critical path. `GET /runs` already covers history reads.

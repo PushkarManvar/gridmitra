@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Response
 
 from app.core.database import database_is_ready
 from app.models import OptimizationRequest, OptimizationResponse
+from app.repositories.persistence import get_run, list_runs
 from app.services.csv_export import render_export_csv
 from app.services.optimizer import OptimizationError, optimize_microgrid
 from app.services.persistence import persist_run
@@ -47,3 +48,29 @@ async def export_csv(response: OptimizationResponse) -> Response:
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{response.run_id}.csv"'},
     )
+
+
+@router.get("/runs")
+async def runs(limit: int = 20) -> dict:
+    try:
+        return {"runs": await list_runs(limit)}
+    except Exception as error:
+        raise HTTPException(
+            status_code=500, detail=f"Could not read run history: {error}"
+        ) from error
+
+
+@router.get("/runs/{run_id}")
+async def run_detail(run_id: str) -> dict:
+    try:
+        run = await get_run(run_id)
+    except Exception as error:
+        raise HTTPException(
+            status_code=500, detail=f"Could not read run: {error}"
+        ) from error
+    if run is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "RUN_NOT_FOUND", "message": f"Run {run_id} not found."}},
+        )
+    return run
