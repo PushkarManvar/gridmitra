@@ -9,6 +9,7 @@ export interface AppState {
   error: string | null;
   loadDemo: () => Promise<void>;
   run: (scenario: Scenario) => Promise<OptimizationResult | null>;
+  restorePrepared: () => Promise<void>;
   reset: () => Promise<void>;
 }
 

@@ -273,12 +273,16 @@ async def save_run(
 
 
 async def list_runs(limit: int = 20) -> list[dict]:
-    """List persisted runs newest first. Each item carries the parsed summary."""
+    """List persisted runs newest first. Each item carries the parsed summary.
+
+    Scenario names come from the run's immutable input snapshot, never from the
+    live scenarios table, so a renamed scenario never mislabels a historical run.
+    """
     async with engine.connect() as connection:
         rows = await connection.execute(
             text(
                 "select r.id, r.scenario_id, r.status, r.created_at, r.summary,"
-                "       s.name as scenario_name, s.scenario_type"
+                "       r.input_snapshot, s.name as scenario_name"
                 "  from gridmitra.optimization_runs r"
                 "  left join gridmitra.scenarios s on s.id = r.scenario_id"
                 "  order by r.created_at desc"
@@ -289,12 +293,13 @@ async def list_runs(limit: int = 20) -> list[dict]:
         runs = []
         for row in rows:
             mapping = dict(row._mapping)
+            snapshot = _decode_json(mapping["input_snapshot"])
             runs.append(
                 {
                     "run_id": str(mapping["id"]),
                     "scenario_id": str(mapping["scenario_id"]) if mapping["scenario_id"] else None,
-                    "scenario_name": mapping["scenario_name"],
-                    "scenario_type": mapping["scenario_type"],
+                    "scenario_name": snapshot.get("scenario_name") or mapping["scenario_name"],
+                    "scenario_type": snapshot.get("scenario_type"),
                     "status": mapping["status"],
                     "created_at": mapping["created_at"],
                     "summary": _decode_json(mapping["summary"]),
@@ -310,8 +315,7 @@ async def get_run(run_id: str) -> dict | None:
             text(
                 "select r.id, r.scenario_id, r.status, r.solver_name, r.solver_status,"
                 "       r.model_version, r.input_snapshot, r.summary, r.baseline_summary,"
-                "       r.persistence_warning, r.created_at,"
-                "       s.name as scenario_name, s.scenario_type"
+                "       r.persistence_warning, r.created_at, s.name as scenario_name"
                 "  from gridmitra.optimization_runs r"
                 "  left join gridmitra.scenarios s on s.id = r.scenario_id"
                 "  where r.id = :id"
@@ -355,16 +359,17 @@ async def get_run(run_id: str) -> dict | None:
             for row in explanation_rows
         ]
 
+        input_snapshot = _decode_json(mapping["input_snapshot"])
         return {
             "run_id": str(mapping["id"]),
             "scenario_id": str(mapping["scenario_id"]) if mapping["scenario_id"] else None,
-            "scenario_name": mapping["scenario_name"],
-            "scenario_type": mapping["scenario_type"],
+            "scenario_name": input_snapshot.get("scenario_name") or mapping["scenario_name"],
+            "scenario_type": input_snapshot.get("scenario_type"),
             "status": mapping["status"],
             "solver_name": mapping["solver_name"],
             "solver_status": mapping["solver_status"],
             "model_version": mapping["model_version"],
-            "input_snapshot": _decode_json(mapping["input_snapshot"]),
+            "input_snapshot": input_snapshot,
             "persistence_warning": mapping["persistence_warning"],
             "created_at": mapping["created_at"],
             "summary": _decode_json(mapping["summary"]),
