@@ -1,4 +1,4 @@
-import type { OptimizationResult, Scenario } from "../types";
+import type { OptimizationResult, Scenario } from "../types/index";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
