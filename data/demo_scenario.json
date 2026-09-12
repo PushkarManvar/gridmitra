@@ -8,7 +8,13 @@
     "timezone": "Asia/Kolkata",
     "currency": "INR",
     "start_time": "2026-09-12T00:00:00+05:30",
-    "interval_hours": 1
+    "interval_hours": 1,
+    "latitude": 23.0225,
+    "longitude": 72.5714,
+    "panel_tilt_degrees": 23,
+    "panel_azimuth_degrees": 0,
+    "solar_derating_factor": 0.85,
+    "wind_hub_height": 10
   },
   "assets": {
     "solar": { "enabled": true, "capacity_kw": 60 },

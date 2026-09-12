@@ -25,6 +25,12 @@ class Site(BaseModel):
     currency: str = Field(min_length=3, max_length=3)
     start_time: str = Field(min_length=1)
     interval_hours: float = Field(default=1, gt=0)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    panel_tilt_degrees: float = Field(default=23.0, ge=0, le=90)
+    panel_azimuth_degrees: float = Field(default=0.0, ge=-180, le=180)
+    solar_derating_factor: float = Field(default=0.85, gt=0, le=1)
+    wind_hub_height: float = Field(default=10.0, gt=0)
 
 
 class SolarConfig(BaseModel):

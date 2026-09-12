@@ -33,6 +33,12 @@ export interface Site {
   currency: string;
   start_time: string;
   interval_hours: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  panel_tilt_degrees?: number;
+  panel_azimuth_degrees?: number;
+  solar_derating_factor?: number;
+  wind_hub_height?: number;
 }
 
 export interface SolarConfig {

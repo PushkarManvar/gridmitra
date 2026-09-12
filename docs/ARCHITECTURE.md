@@ -174,6 +174,7 @@ Full detail belongs in `docs/OPTIMIZATION_MODEL.md`. Current implementation in `
 ## Resilience and error handling
 
 - Prepared data is the primary judge-demo path; live weather is optional and cached.
+- Live weather is fetched by FastAPI only (`GET /api/v1/weather/forecast` → Open-Meteo). The optimizer never calls the weather provider; on failure the frontend falls back to prepared data with a `FALLBACK_DATA_USED` warning, and optimization is never blocked.
 - Unserved-energy variables make supply shortages solvable; the soft reserve makes reserve misses solvable and visible.
 - Extreme scenarios return plans with unmet load and warnings instead of an infeasible blank screen.
 - A database failure must not invalidate an optimization result that has already been calculated; the response is returned even if saving the run fails.

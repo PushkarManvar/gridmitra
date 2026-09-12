@@ -72,6 +72,12 @@ critical
 | `currency` | string | Yes | Three-letter code such as `INR` |
 | `start_time` | string | Yes | ISO 8601 timestamp for hour 0 |
 | `interval_hours` | number | Yes | Must equal 1 for the MVP |
+| `latitude` | number | No | Site latitude, −90..90 (live weather) |
+| `longitude` | number | No | Site longitude, −180..180 (live weather) |
+| `panel_tilt_degrees` | number | No | Default 23, 0..90 |
+| `panel_azimuth_degrees` | number | No | Default 0 (south in Open-Meteo), −180..180 |
+| `solar_derating_factor` | number | No | Default 0.85, 0..1 |
+| `wind_hub_height` | number | No | Default 10 m |
 
 ### 4.3 Solar configuration
 

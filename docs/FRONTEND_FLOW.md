@@ -111,6 +111,14 @@ Required elements:
 
 CSV import and live-weather refresh are optional. Prepared data remains the primary judge path.
 
+Live weather flow (optional, Open-Meteo via `GET /api/v1/weather/forecast`):
+
+- Show location inputs (latitude, longitude, panel tilt, panel azimuth) prefilled from the site.
+- `Fetch Live Weather` calls the backend; a provider failure falls back to prepared data with a `PREPARED FALLBACK` badge and `FALLBACK_DATA_USED` warning.
+- Source badge shows `LIVE WEATHER`, `CACHED FORECAST` or `PREPARED FALLBACK`; show last-updated time.
+- Fetched values replace only solar/wind availability — P1–P4 demand stays unchanged.
+- `Run Optimization with Live Weather` is a separate operator action from fetching; fetching never auto-runs the optimizer.
+
 ### 5.5 Dispatch Results
 
 Required KPI cards:

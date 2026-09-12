@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
+from app.api.weather import router as weather_router
 from app.core.config import get_settings
 from app.core.migrations import run_migrations
 
@@ -35,6 +36,7 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 app.include_router(router)
+app.include_router(weather_router, prefix="/api/v1")
 
 
 @app.exception_handler(RequestValidationError)
