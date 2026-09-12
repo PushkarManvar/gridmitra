@@ -10,6 +10,8 @@ export interface WeatherRequest {
   panel_tilt_degrees: number;
   panel_azimuth_degrees: number;
   solar_derating_factor: number;
+  date: string;
+  timezone: string;
 }
 
 export async function fetchWeatherForecast(
