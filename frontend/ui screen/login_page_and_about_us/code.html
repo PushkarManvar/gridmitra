@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html class="h-full scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GridMitra - Reliability-First Energy Optimization Platform</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Space Grotesk & Inter -->
+<link href="https://fonts.preconnect" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            cream: {
+              50: '#FBF9F5',
+              100: '#FAF7F2',
+              200: '#F5F1E9',
+              300: '#EFE9DE',
+            },
+            warmgray: {
+              200: '#E5E0D8',
+              300: '#D5CFC5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Styling: Core Layout and Backdrop Effects -->
+<style data-purpose="layout">
+    body {
+      background-color: #FAF7F2;
+      color: #1F2937;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .hero-bg-container {
+      background-image: linear-gradient(
+        135deg,
+        rgba(15, 23, 42, 0.45) 0%,
+        rgba(15, 23, 42, 0.32) 40%,
+        rgba(6, 40, 30, 0.38) 75%,
+        rgba(4, 30, 22, 0.48) 100%
+      ), url('https://lh3.googleusercontent.com/aida/AEtjO1WbUA1CbdtjYEq3skma9DCSa6MPIrFqfx98rDc1COygX-ZVQ1ZCeBYHQipD4nkYShIMhwEiurN0DwmTu2_yJb3RklxcE6Y76FOioSmd8RcEUu5sLiE9KGvfcZOCi5KQAikjojvWWbkONqJdX5uPg1yDUR_HRrqIwkv8evnKxxK3c5CuZ24qfrgnpeynAEpunKZt7CoRF13ozPJrN5fO294dAvxZZnDlil3nRoLf6ichGLKYT_xf3MLMSaU');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    .hero-text-shadow {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+    .hero-subtext-shadow {
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen p-3 md:p-6 lg:p-8 flex flex-col items-center justify-start" id="top">
+<!-- BEGIN: ApplicationOuterFrame -->
+<div class="w-full max-w-[1520px] rounded-2xl shadow-xl border border-[#E5E0D8] flex flex-col relative overflow-hidden bg-white" data-purpose="desktop-app-frame">
+<!-- BEGIN: TopNavigation -->
+<header class="w-full border-b border-[#E5E0D8] bg-white px-6 py-3.5 flex items-center justify-between z-20" data-purpose="main-navigation">
+<!-- Left Branding -->
+<div class="flex items-center gap-3">
+<!-- Logo Emblem -->
+<div class="w-9 h-9 rounded-lg bg-[#065F46] p-1.5 flex items-center justify-center shadow-sm">
+<img alt="GridMitra Emblem" class="w-full h-full object-contain rounded filter brightness-110 invert" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe6zcje8Xy6Lh8Cf_5B4G8D9iewA0ydS4Ma8e89CsPBfsWcxFrYImSQS_Mbu4ExqiPUgrvfVQ26vcvqBxtVFtXcVkbn_EycMfOzF4ot34BhKy_tn4Efk8Y-Bh9YJ2EsMgJoj-eBL8MEr7EZiCrxj3ZP7_f8FOaNMIEJ_gPMGEWNDJqH1bEBFcYm5y-QAxZdPvZJE4X0PjOcmqRlFqianUbQYnxq-5CDBI5exZmsnkkKqcCCdZSrILbgmQvDn8GJj7Urg"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-display font-bold tracking-wider text-base text-neutral-900">GRIDMITRA</span>
+<span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-emerald-50 text-[#065F46] border border-emerald-200">v2.4 PRO</span>
+<span class="text-[10px] uppercase font-medium px-2 py-0.5 rounded bg-[#F5F1E9] text-neutral-600 border border-[#E5E0D8]">MICROGRID CORE</span>
+</div>
+<span class="text-xs text-neutral-500 font-normal">Reliability-First Energy Optimization Platform</span>
+</div>
+</div>
+<!-- Right Actions: Subdued status pill -->
+<div class="flex items-center gap-2 text-xs text-neutral-500">
+<span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
+<span class="hidden sm:inline font-medium text-neutral-600">Operations Node Active</span>
+</div>
+</header>
+<!-- END: TopNavigation -->
+<!-- BEGIN: HeroContentArea with Preserved Background Photo -->
+<div class="relative w-full hero-bg-container flex flex-col justify-between" data-purpose="hero-photo-wrapper">
+<main class="w-full p-6 lg:p-8 grid grid-cols-12 gap-8 items-center z-10 min-h-[640px]" data-purpose="hero-main-container">
+<!-- BEGIN: LeftMainPanel (Auth Panel) -->
+<section class="col-span-12 lg:col-span-5 xl:col-span-5 flex flex-col justify-center" data-purpose="left-configuration-panel">
+<div class="bg-white text-neutral-900 rounded-2xl p-6 lg:p-7 shadow-xl shadow-neutral-900/10 border border-[#E5E0D8] flex flex-col gap-3.5 transition-all">
+<!-- Top Pill Badge -->
+<div class="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-[#E6F4EA] border border-emerald-200">
+<span class="w-1.5 h-1.5 rounded-full bg-[#065F46]"></span>
+<span class="text-[11px] font-semibold text-[#065F46] tracking-wide uppercase">GRIDMITRA ACCOUNT</span>
+</div>
+<!-- Dynamic Header Info -->
+<div>
+<h1 class="text-2xl font-display font-bold leading-tight text-neutral-900" id="auth-title">
+  Welcome back
+</h1>
+<p class="text-xs text-neutral-600 leading-relaxed mt-0.5" id="auth-subtitle">
+  Sign in to continue to your GridMitra workspace.
+</p>
+</div>
+<!-- Tab Switcher -->
+<div class="p-1 bg-[#F5F1E9] rounded-xl flex items-center border border-[#E5E0D8]">
+<button class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#065F46] text-white shadow-sm transition-all duration-150" id="tab-signin-btn" type="button">Sign In</button>
+<button class="flex-1 py-1.5 text-xs font-medium text-neutral-700 hover:text-neutral-900 rounded-lg transition-all duration-150" id="tab-signup-btn" type="button">Sign Up</button>
+</div>
+<!-- Success Message Banner -->
+<div class="hidden p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[#065F46] text-xs font-medium flex items-center gap-2" id="auth-success-banner">
+<span class="material-symbols-outlined text-base text-[#065F46]">check_circle</span>
+<span id="auth-success-text">Sign in successful! Entering workspace...</span>
+</div>
+<!-- SIGN IN FORM -->
+<form class="flex flex-col gap-3" id="signin-form" onsubmit="event.preventDefault(); handleAuthSubmit('signin');">
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Email Address</label>
+<div class="relative">
+<input class="w-full text-xs px-3 py-2 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signin-email" placeholder="operator@gridmitra.org" required="" type="email" value="operator@gridmitra.org"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Password</label>
+<div class="relative flex items-center">
+<input class="w-full text-xs px-3 py-2 pr-9 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signin-password" placeholder="Enter password" required="" type="password" value="••••••••••••"/>
+<button class="absolute right-2.5 text-neutral-400 hover:text-neutral-600" onclick="togglePasswordVisibility('signin-password', this)" type="button">
+<span class="material-symbols-outlined text-base">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-neutral-600 pt-0.5">
+<label class="flex items-center gap-1.5 cursor-pointer select-none">
+<input checked="" class="rounded border-[#E5E0D8] text-[#065F46] focus:ring-[#065F46] h-3.5 w-3.5" type="checkbox"/>
+<span>Remember me</span>
+</label>
+<a class="font-medium text-[#065F46] hover:text-[#047857] hover:underline" href="javascript:void(0)" onclick="alert('Password reset instructions sent to operator email.')">Forgot password?</a>
+</div>
+<button class="w-full mt-1 py-3 px-4 rounded-xl bg-[#065F46] hover:bg-[#047857] active:scale-[0.99] text-white font-medium text-xs tracking-wide shadow-md transition-all flex items-center justify-center gap-1.5" id="signin-submit-btn" type="submit">
+<span>Sign In</span>
+<span class="text-emerald-200">→</span>
+</button>
+</form>
+<!-- SIGN UP FORM (initially hidden) -->
+<form class="hidden flex flex-col gap-2.5" id="signup-form" onsubmit="event.preventDefault(); handleAuthSubmit('signup');">
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Full Name</label>
+<input class="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signup-name" placeholder="Dr. Ananya Sharma" required="" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Email Address</label>
+<input class="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signup-email" placeholder="operator@gridmitra.org" required="" type="email"/>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Password</label>
+<div class="relative flex items-center">
+<input class="w-full text-xs px-3 py-1.5 pr-8 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signup-password" placeholder="Create password" required="" type="password"/>
+<button class="absolute right-2 text-neutral-400 hover:text-neutral-600" onclick="togglePasswordVisibility('signup-password', this)" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider block">Confirm</label>
+<input class="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D8] focus:outline-none focus:border-[#065F46] focus:ring-1 focus:ring-[#065F46] text-neutral-800 placeholder-neutral-400 bg-white" id="signup-confirm" placeholder="Confirm password" required="" type="password"/>
+</div>
+</div>
+<div class="flex items-start gap-2 pt-1">
+<input class="rounded border-[#E5E0D8] text-[#065F46] focus:ring-[#065F46] h-3.5 w-3.5 mt-0.5" id="signup-terms" required="" type="checkbox"/>
+<label class="text-[11px] text-neutral-600 leading-snug cursor-pointer" for="signup-terms">
+  I agree to the GridMitra terms and privacy policy.
+</label>
+</div>
+<button class="w-full mt-1.5 py-3 px-4 rounded-xl bg-[#065F46] hover:bg-[#047857] active:scale-[0.99] text-white font-medium text-xs tracking-wide shadow-md transition-all flex items-center justify-center gap-1.5" id="signup-submit-btn" type="submit">
+<span>Create Account</span>
+<span class="text-emerald-200">→</span>
+</button>
+<div class="text-center text-[11px] text-neutral-500 pt-0.5">
+    Already have an account? <button class="font-semibold text-[#065F46] hover:underline" onclick="switchAuthTab('signin')" type="button">Sign In</button>
+</div>
+</form>
+<!-- Bottom Advisory & Policy -->
+<div class="pt-2 border-t border-[#E5E0D8] text-[10px] text-neutral-500 leading-snug">
+  By continuing, you agree to the GridMitra terms and privacy policy.
+</div>
+</div>
+</section>
+<!-- END: LeftMainPanel -->
+<!-- BEGIN: RightSideHero -->
+<section class="col-span-12 lg:col-span-7 xl:col-span-7 flex flex-col justify-center space-y-6 lg:pl-4" data-purpose="right-hero-showcase">
+<!-- Top Pill -->
+<div class="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full bg-white/95 border border-[#E5E0D8] backdrop-blur-sm shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-[#065F46]"></span>
+<span class="text-xs font-semibold text-[#065F46] tracking-wide">24-Hour Lookahead Optimization</span>
+</div>
+<!-- Hero Headline and Subtitle -->
+<div class="space-y-3">
+<h2 class="text-3xl lg:text-4xl xl:text-5xl font-display font-bold text-white leading-tight tracking-tight hero-text-shadow">
+            Know what your microgrid<br/>
+            needs before the demand<br/>
+            arrives.
+          </h2>
+<p class="text-xs lg:text-sm text-neutral-100 max-w-xl leading-relaxed hero-subtext-shadow font-medium">
+            Forecast renewable generation, protect critical community services, and choose the most efficient energy mix across changing weather and tariffs.
+          </p>
+</div>
+<!-- Energy Flow Dispatch Sequence -->
+<div class="space-y-2 pt-2" data-purpose="dispatch-architecture-flow">
+<div class="text-[10px] uppercase font-bold tracking-widest text-white/95 hero-subtext-shadow flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            DYNAMIC MULTI-SOURCE DISPATCH ARCHITECTURE
+          </div>
+<div class="grid grid-cols-5 gap-2.5">
+<!-- Solar Node -->
+<div class="bg-white/90 backdrop-blur-sm rounded-xl p-2.5 flex flex-col items-center justify-center text-center border-t-2 border-t-[#D97706] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-[9px] uppercase font-bold text-[#D97706]">SOLAR</span>
+<span class="text-[10px] font-medium text-neutral-700">Primary PV</span>
+</div>
+<!-- Wind Node -->
+<div class="bg-white/90 backdrop-blur-sm rounded-xl p-2.5 flex flex-col items-center justify-center text-center border-t-2 border-t-[#0D9488] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-[9px] uppercase font-bold text-[#0D9488]">WIND</span>
+<span class="text-[10px] font-medium text-neutral-700">Turbine Base</span>
+</div>
+<!-- Battery Node -->
+<div class="bg-white/90 backdrop-blur-sm rounded-xl p-2.5 flex flex-col items-center justify-center text-center border-t-2 border-t-[#2563EB] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-[9px] uppercase font-bold text-[#2563EB]">BATTERY</span>
+<span class="text-[10px] font-medium text-neutral-700">BESS Buffer</span>
+</div>
+<!-- Community Hub (Central Focus) -->
+<div class="bg-gradient-to-b from-[#065F46] to-[#047857] border-2 border-emerald-300 rounded-xl p-2.5 flex flex-col items-center justify-center text-center shadow-lg scale-105">
+<span class="text-[9px] uppercase font-extrabold tracking-wide text-white">COMMUNITY</span>
+<span class="text-[10px] font-medium text-emerald-100">P1 Critical Load</span>
+</div>
+<!-- Diesel Node -->
+<div class="bg-white/90 backdrop-blur-sm rounded-xl p-2.5 flex flex-col items-center justify-center text-center border-t-2 border-t-[#EA580C] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-[9px] uppercase font-bold text-[#EA580C]">DIESEL</span>
+<span class="text-[10px] font-medium text-neutral-700">Emergency AUX</span>
+</div>
+</div>
+</div>
+<!-- Lower 3 Feature Cards -->
+<div class="grid grid-cols-3 gap-3 pt-2" data-purpose="value-proposition-cards">
+<!-- Card 1: Reliability -->
+<div class="bg-white/95 backdrop-blur-sm rounded-xl p-3.5 border-l-4 border-l-[#065F46] border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-[#065F46] mb-1">RELIABILITY-FIRST</h4>
+<p class="text-[11px] text-neutral-700 leading-snug">Prioritizes medical clinics, water pumps, and essential services.</p>
+</div>
+<!-- Card 2: Cost Aware -->
+<div class="bg-white/95 backdrop-blur-sm rounded-xl p-3.5 border-l-4 border-l-amber-600 border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">COST-AWARE</h4>
+<p class="text-[11px] text-neutral-700 leading-snug">Dispatches diesel only when renewable limits and storage constraints require it.</p>
+</div>
+<!-- Card 3: Carbon Aware -->
+<div class="bg-white/95 backdrop-blur-sm rounded-xl p-3.5 border-l-4 border-l-[#0D9488] border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-[#0D9488] mb-1">CARBON-AWARE</h4>
+<p class="text-[11px] text-neutral-700 leading-snug">Maximizes clean solar and wind utilization to reduce avoidable emissions.</p>
+</div>
+</div>
+</section>
+<!-- END: RightSideHero -->
+</main>
+<!-- Hero Accordion Strip Toggle Bar at Bottom of Hero -->
+<div class="w-full pb-4 px-6 flex justify-center z-10" data-purpose="hero-accordion-bar">
+<button class="bg-white/95 hover:bg-white border border-[#E5E0D8] text-neutral-800 shadow-sm rounded-full px-6 py-2 flex items-center gap-2 cursor-pointer transition-all duration-200 group hover:border-[#065F46]" id="about-accordion-btn" onclick="toggleAboutAccordion()" type="button">
+<span class="text-xs font-semibold text-neutral-800 group-hover:text-[#065F46]">About GridMitra</span>
+<span class="material-symbols-outlined text-base text-neutral-600 group-hover:text-[#065F46] transition-transform duration-300" id="accordion-chevron">expand_more</span>
+</button>
+</div>
+</div>
+<!-- END: HeroContentArea -->
+<!-- BEGIN: Complete On-Page About GridMitra Section (Collapsible Accordion, Light Enterprise Theme) -->
+<section class="w-full bg-[#FAF7F2] border-t border-[#E5E0D8] p-8 lg:p-12 text-neutral-900 shadow-inner transition-all duration-500 hidden" data-purpose="about-gridmitra-section" id="about">
+<div class="max-w-[1400px] mx-auto">
+<!-- Header & Subtitle -->
+<div class="max-w-3xl mb-10 space-y-3">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F4EA] border border-emerald-200 text-[#065F46] text-xs font-semibold uppercase tracking-wider">
+      ABOUT GRIDMITRA
+    </div>
+<h2 class="text-2xl lg:text-4xl font-display font-bold text-neutral-900 tracking-tight leading-tight">
+      Smarter energy for communities that can't afford uncertainty.
+    </h2>
+<p class="text-sm lg:text-base text-neutral-600 leading-relaxed">
+      GridMitra helps off-grid communities plan how solar, wind, battery storage and diesel backup should work together across the next 24 hours.
+    </p>
+</div>
+<!-- The Challenge -->
+<div class="mb-12 rounded-xl p-6 bg-[#F5F1E9] border border-[#E5E0D8]">
+<h3 class="text-xs uppercase font-bold tracking-widest text-[#065F46] mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">warning</span> THE CHALLENGE
+    </h3>
+<p class="text-sm text-neutral-700 leading-relaxed max-w-4xl">
+      Off-grid communities often combine renewable energy with battery storage and diesel backup. Renewable generation changes with weather and time, demand changes throughout the day, and fuel costs can make backup generation expensive.
+    </p>
+</div>
+<!-- How GridMitra Works (5 Steps) -->
+<div class="mb-12 space-y-4">
+<h3 class="text-xs uppercase font-bold tracking-widest text-[#065F46] flex items-center gap-2">
+<span class="material-symbols-outlined text-base">alt_route</span> HOW GRIDMITRA WORKS
+    </h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+<div class="bg-white rounded-xl p-4 border border-[#E5E0D8] shadow-sm hover:border-[#065F46]/60 transition-colors">
+<div class="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#E5E0D8] text-[#065F46] font-bold text-xs flex items-center justify-center mb-3">01</div>
+<h4 class="text-sm font-semibold text-neutral-900 mb-1">Forecast</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Predict solar, wind, and demand across rolling 24-hour windows.</p>
+</div>
+<div class="bg-white rounded-xl p-4 border border-[#E5E0D8] shadow-sm hover:border-[#065F46]/60 transition-colors">
+<div class="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#E5E0D8] text-[#065F46] font-bold text-xs flex items-center justify-center mb-3">02</div>
+<h4 class="text-sm font-semibold text-neutral-900 mb-1">Prioritize</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Protect critical loads, clinics, and clean water supplies first.</p>
+</div>
+<div class="bg-white rounded-xl p-4 border border-[#E5E0D8] shadow-sm hover:border-[#065F46]/60 transition-colors">
+<div class="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#E5E0D8] text-[#065F46] font-bold text-xs flex items-center justify-center mb-3">03</div>
+<h4 class="text-sm font-semibold text-neutral-900 mb-1">Optimize</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Calculate the best dispatch plan for each hour.</p>
+</div>
+<div class="bg-white rounded-xl p-4 border border-[#E5E0D8] shadow-sm hover:border-[#065F46]/60 transition-colors">
+<div class="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#E5E0D8] text-[#065F46] font-bold text-xs flex items-center justify-center mb-3">04</div>
+<h4 class="text-sm font-semibold text-neutral-900 mb-1">Explain</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Show why important generation and battery decisions were made.</p>
+</div>
+<div class="bg-white rounded-xl p-4 border border-[#E5E0D8] shadow-sm hover:border-[#065F46]/60 transition-colors">
+<div class="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#E5E0D8] text-[#065F46] font-bold text-xs flex items-center justify-center mb-3">05</div>
+<h4 class="text-sm font-semibold text-neutral-900 mb-1">Compare</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Evaluate cost, emissions, and reliability trade-offs against reactive operation.</p>
+</div>
+</div>
+</div>
+<!-- Integrated Energy Mix Cards -->
+<div class="mb-12 space-y-4">
+<h3 class="text-xs uppercase font-bold tracking-widest text-[#065F46] flex items-center gap-2">
+<span class="material-symbols-outlined text-base">hub</span> BALANCED ENERGY MIX
+    </h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="p-4 rounded-xl bg-white border-t-4 border-t-[#D97706] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-xs font-bold uppercase tracking-wider text-[#D97706]">Solar PV</span>
+<p class="text-xs text-neutral-600 mt-1">Zero marginal cost daylight generation prioritized for direct load coverage and charging.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-t-4 border-t-[#0D9488] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-xs font-bold uppercase tracking-wider text-[#0D9488]">Wind Turbine</span>
+<p class="text-xs text-neutral-600 mt-1">Complementary nocturnal and seasonal generation buffering evening power demand.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-t-4 border-t-[#2563EB] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Battery Storage</span>
+<p class="text-xs text-neutral-600 mt-1">Smart state-of-charge management preventing unnecessary deep discharge cycles.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-t-4 border-t-[#EA580C] border-x border-b border-[#E5E0D8] shadow-sm">
+<span class="text-xs font-bold uppercase tracking-wider text-[#EA580C]">Diesel Backup</span>
+<p class="text-xs text-neutral-600 mt-1">Last-resort automated reserve ensuring 100% critical uptime during prolonged deficits.</p>
+</div>
+</div>
+</div>
+<!-- Core Pillars / Why GridMitra -->
+<div class="mb-12 space-y-4">
+<h3 class="text-xs uppercase font-bold tracking-widest text-[#065F46] flex items-center gap-2">
+<span class="material-symbols-outlined text-base">verified</span> WHY GRIDMITRA
+    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="p-4 rounded-xl bg-white border-l-4 border-l-[#065F46] border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-xs font-bold uppercase tracking-wider text-[#065F46] mb-1">Reliability-First</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Protect critical community services before flexible loads during supply constraints.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-l-4 border-l-amber-600 border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">Cost-Aware</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Reduce unnecessary dependence on diesel generation.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-l-4 border-l-[#0D9488] border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-xs font-bold uppercase tracking-wider text-[#0D9488] mb-1">Carbon-Aware</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Increase intelligent use of renewable energy and reduce avoidable emissions.</p>
+</div>
+<div class="p-4 rounded-xl bg-white border-l-4 border-l-indigo-600 border-y border-r border-[#E5E0D8] shadow-sm">
+<h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-1">Explainable</h4>
+<p class="text-xs text-neutral-600 leading-relaxed">Show why important dispatch decisions were made.</p>
+</div>
+</div>
+</div>
+<!-- Technical Strip -->
+<div class="mb-10 p-4 rounded-xl bg-[#F5F1E9] border border-[#E5E0D8] flex flex-wrap items-center justify-between gap-2.5 text-xs text-neutral-700">
+<span class="font-semibold text-neutral-900 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-[#065F46]">memory</span> Engine Capabilities:
+</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-neutral-700">24-Hour Optimization</span>
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-neutral-700">Priority-Aware Dispatch</span>
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-neutral-700">Battery Reserve Protection</span>
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-neutral-700">Baseline Comparison</span>
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-neutral-700">Rule-Based Explainability</span>
+<span class="px-2.5 py-1 rounded bg-white border border-[#E5E0D8] font-medium text-[#065F46]">Decision Support — Not Direct Control</span>
+</div>
+</div>
+<!-- Decision Support Disclaimer & Return Clean Link -->
+<div class="pt-6 border-t border-[#E5E0D8] flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2 text-xs text-neutral-500">
+<span class="material-symbols-outlined text-base text-neutral-500">info</span>
+<span>GridMitra is a decision-support platform. Recommended dispatch plans remain subject to operator review and do not directly control physical equipment.</span>
+</div>
+<button class="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#065F46] font-medium transition-colors bg-transparent border-0 cursor-pointer p-0" onclick="toggleAboutAccordion()" type="button">
+<span>Close section</span>
+<span>↑</span>
+</button>
+</div>
+</div>
+</section>
+<!-- END: Complete On-Page About GridMitra Section -->
+</div>
+<!-- END: ApplicationOuterFrame -->
+<!-- Vanilla JS for Tab Switching, Accordion Toggle, & Form Handling -->
+<script>
+  function switchAuthTab(tab) {
+    const signinBtn = document.getElementById('tab-signin-btn');
+    const signupBtn = document.getElementById('tab-signup-btn');
+    const signinForm = document.getElementById('signin-form');
+    const signupForm = document.getElementById('signup-form');
+    const authTitle = document.getElementById('auth-title');
+    const authSubtitle = document.getElementById('auth-subtitle');
+    const banner = document.getElementById('auth-success-banner');
+    banner.classList.add('hidden');
+
+    if (tab === 'signin') {
+      signinBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#065F46] text-white shadow-sm transition-all duration-150";
+      signupBtn.className = "flex-1 py-1.5 text-xs font-medium text-neutral-700 hover:text-neutral-900 rounded-lg transition-all duration-150";
+      signinForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+      authTitle.textContent = "Welcome back";
+      authSubtitle.textContent = "Sign in to continue to your GridMitra workspace.";
+    } else {
+      signupBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#065F46] text-white shadow-sm transition-all duration-150";
+      signinBtn.className = "flex-1 py-1.5 text-xs font-medium text-neutral-700 hover:text-neutral-900 rounded-lg transition-all duration-150";
+      signupForm.classList.remove('hidden');
+      signinForm.classList.add('hidden');
+      authTitle.textContent = "Create your GridMitra account";
+      authSubtitle.textContent = "Set up your account to access the microgrid workspace.";
+    }
+  }
+
+  document.getElementById('tab-signin-btn').addEventListener('click', () => switchAuthTab('signin'));
+  document.getElementById('tab-signup-btn').addEventListener('click', () => switchAuthTab('signup'));
+
+  function togglePasswordVisibility(inputId, triggerBtn) {
+    const input = document.getElementById(inputId);
+    const icon = triggerBtn.querySelector('.material-symbols-outlined');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  function handleAuthSubmit(type) {
+    const submitBtn = type === 'signin' ? document.getElementById('signin-submit-btn') : document.getElementById('signup-submit-btn');
+    const banner = document.getElementById('auth-success-banner');
+    const bannerText = document.getElementById('auth-success-text');
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>${type === 'signin' ? 'Signing in...' : 'Creating account...'}</span>`;
+
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      banner.classList.remove('hidden');
+      bannerText.textContent = type === 'signin' 
+        ? "Sign in successful! Entering workspace..." 
+        : "Account created successfully! Preparing workspace...";
+    }, 700);
+  }
+
+  function toggleAboutAccordion() {
+    const aboutSec = document.getElementById('about');
+    const chevron = document.getElementById('accordion-chevron');
+    if (aboutSec) {
+      if (aboutSec.classList.contains('hidden')) {
+        aboutSec.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+        aboutSec.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        aboutSec.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body></html>

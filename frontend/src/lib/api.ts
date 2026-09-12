@@ -3,6 +3,7 @@ import type {
   RunDetail,
   RunListItem,
   Scenario,
+  ScenarioVersionInfo,
 } from "../types/index";
 
 // Same-origin: the Vite dev proxy forwards /api to the backend, so the httpOnly
@@ -59,6 +60,30 @@ export function getMe(): Promise<AuthUser> {
 
 export function getDemoScenario(): Promise<Scenario> {
   return request<Scenario>("/api/v1/scenarios/demo");
+}
+
+export async function listScenarios(): Promise<ScenarioVersionInfo[]> {
+  const payload = await request<{ scenarios: ScenarioVersionInfo[] }>("/api/v1/scenarios");
+  return payload.scenarios;
+}
+
+export async function saveScenario(
+  scenario: Scenario,
+): Promise<{ name: string; scenario_type: string; version: number }> {
+  return request<{ name: string; scenario_type: string; version: number }>(
+    "/api/v1/scenarios",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(scenario),
+    },
+  );
+}
+
+export async function getScenarioLatest(
+  name: string,
+): Promise<ScenarioVersionInfo> {
+  return request<ScenarioVersionInfo>(`/api/v1/scenarios/${encodeURIComponent(name)}/latest`);
 }
 
 export function optimizeScenario(scenario: Scenario): Promise<OptimizationResult> {

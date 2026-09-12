@@ -174,6 +174,19 @@ Response:
 - Provider failure with no cache returns HTTP `503` `{"error": {"code": "WEATHER_UNAVAILABLE", "message": "Live weather is unavailable. Use prepared data."}}`. A failed weather fetch never fails optimization.
 - Demand values are not returned — weather does not provide community P1–P4 demand.
 
+## Scenario versions (Phase B — Decision 014)
+
+Owner-scoped saved scenario drafts. Optimizer results are never stored here; runs keep their own immutable snapshots.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/v1/scenarios` | List the latest saved version of each of my scenarios |
+| POST | `/api/v1/scenarios` | Save the next immutable version (body = full `OptimizationRequest`); requires `operator` |
+| GET | `/api/v1/scenarios/{name}/latest` | Load the latest saved version's payload |
+| GET | `/api/v1/scenarios/{name}/versions` | Version metadata for a scenario |
+
+`POST /scenarios` returns `{"name", "scenario_type", "version"}` with `201`. Unknown scenario returns `404 SCENARIO_NOT_FOUND`.
+
 ## Auth endpoints (Phase B)
 
 Authentication uses an `httpOnly`, `Secure`, `SameSite=Lax` session cookie named `gridmitra_session`. Passwords are hashed with Argon2.

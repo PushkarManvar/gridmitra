@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.auth import router as auth_router
 from app.api.routes import router
+from app.api.scenarios import router as scenarios_router
 from app.api.weather import router as weather_router
 from app.core.config import get_settings
 from app.core.database import database_is_ready
@@ -55,6 +56,7 @@ async def health() -> dict[str, str]:
 app.include_router(public_router)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(router)
+app.include_router(scenarios_router, prefix="/api/v1")
 app.include_router(weather_router, prefix="/api/v1")
 
 

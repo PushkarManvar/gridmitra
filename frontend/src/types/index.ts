@@ -213,3 +213,11 @@ export interface RunDetail {
   dispatch_hours: DispatchHour[];
   explanations: Explanation[];
 }
+
+export interface ScenarioVersionInfo {
+  name: string;
+  scenario_type: ScenarioType;
+  version: number;
+  created_at: string;
+  payload?: Scenario;
+}
