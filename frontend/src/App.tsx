@@ -23,6 +23,13 @@ function LoginRoute() {
   return <Login />;
 }
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { user, ready } = useAuth();
+  if (!ready) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <BrowserRouter>
@@ -30,7 +37,13 @@ function AppRoutes() {
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route path="/about" element={<About />} />
-          <Route element={<Outlet />}>
+          <Route
+            element={
+              <RequireAuth>
+                <Outlet />
+              </RequireAuth>
+            }
+          >
             <Route path="/" element={<SiteSelection />} />
             <Route element={<AppShell />}>
               <Route path="/overview" element={<Overview />} />
