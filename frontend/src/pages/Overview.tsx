@@ -16,10 +16,32 @@ export function Overview() {
   const navigate = useNavigate();
   const { scenario, result, loading, error, run } = useApp();
 
-  if (!scenario || !result) {
+  if (!scenario) {
     return (
       <div className="min-h-screen bg-surface-container-lowest p-8">
-        <p className="text-sm text-secondary">{error ?? "Loading demo scenario…"}</p>
+        <p className="text-sm text-secondary">{error ?? "Loading…"}</p>
+      </div>
+    );
+  }
+
+  if (!result) {
+    return (
+      <div className="min-h-screen bg-surface-container-lowest p-8">
+        <div className="max-w-md mx-auto bg-surface-container-low border border-outline-variant rounded-xl p-6 text-center">
+          <span className="material-symbols-outlined text-primary text-[32px] block mx-auto mb-2">bolt</span>
+          <h2 className="text-lg font-bold text-on-surface">Ready to optimize?</h2>
+          <p className="text-sm text-secondary mt-2">
+            The prepared community is loaded. Run the 24-hour optimization to generate the dispatch plan.
+          </p>
+          <button
+            onClick={() => void run(scenario)}
+            disabled={loading}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors disabled:opacity-60"
+          >
+            <span className="material-symbols-outlined text-[18px]">bolt</span>
+            <span>{loading ? "Optimizing…" : "Run Optimization"}</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -49,7 +71,11 @@ export function Overview() {
         </div>
 
         <section className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#F7F4EC] border border-secondary-fixed rounded-xl text-xs">
-          <div className="flex items-center gap-8">
+          <div className="flex flex-wrap items-center gap-6">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] text-[10px] font-mono font-bold uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+              Prepared demo data
+            </span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-secondary uppercase font-semibold text-[10px]">SCENARIO</span>
               <span className="font-semibold text-on-surface">{scenario.scenario_name}</span>

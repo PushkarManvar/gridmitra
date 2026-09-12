@@ -5,11 +5,68 @@ import { getDemoScenario, optimizeScenario } from "../lib/api";
 import type { OptimizationResult, Scenario } from "../types/index";
 import { AppContext } from "./AppContext";
 
+const SESSION_KEY = "gridmitra-session";
+
+interface SessionSnapshot {
+  scenario: Scenario;
+  result: OptimizationResult;
+}
+
+function readSession(): SessionSnapshot | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SessionSnapshot;
+    if (!parsed?.scenario || !parsed?.result) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(scenario: Scenario, result: OptimizationResult): void {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ scenario, result }));
+  } catch {
+    // sessionStorage unavailable; the demo still works, it just won't restore on refresh
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // First application load: restore a cached session, otherwise fetch the
+  // prepared scenario ONLY. No optimization and no database write here.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const cached = readSession();
+        if (cached) {
+          if (!cancelled) {
+            setScenario(cached.scenario);
+            setResult(cached.result);
+          }
+        } else {
+          const demo = await getDemoScenario();
+          if (!cancelled) setScenario(demo);
+        }
+      } catch (caught) {
+        if (!cancelled) {
+          setError(caught instanceof Error ? caught.message : "Could not load the demo");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const run = useCallback(async (nextScenario: Scenario) => {
     setLoading(true);
@@ -18,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setScenario(nextScenario);
       const nextResult = await optimizeScenario(nextScenario);
       setResult(nextResult);
+      writeSession(nextScenario, nextResult);
       return nextResult;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Optimization failed");
@@ -33,17 +91,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const demo = await getDemoScenario();
       setScenario(demo);
-      setResult(await optimizeScenario(demo));
+      const nextResult = await optimizeScenario(demo);
+      setResult(nextResult);
+      writeSession(demo, nextResult);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load the demo");
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    void loadDemo();
-  }, [loadDemo]);
 
   const value = useMemo(
     () => ({ scenario, result, loading, error, loadDemo, run, reset: loadDemo }),
