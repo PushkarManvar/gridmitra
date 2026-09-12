@@ -176,17 +176,16 @@ export function Login() {
         <img src={heroBg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
         <div className="absolute inset-0 bg-[linear-gradient(150deg,rgba(7,42,35,0.94),rgba(9,62,51,0.80)_58%,rgba(7,31,27,0.94))]" />
         <div className="relative z-10 flex h-full flex-col p-10 xl:p-14">
-          <div className="flex items-center gap-3 text-white/75"><span className="h-px w-8 bg-[#9FD0BC]" /><span className="text-[11px] font-semibold uppercase tracking-[0.16em]">24-hour operating plan</span></div>
+          <div className="flex items-center gap-3 text-white/75"><span className="h-px w-8 bg-[#9FD0BC]" /><span className="text-[11px] font-semibold uppercase tracking-[0.16em]">GridMitra for off-grid communities</span></div>
           <div className="my-auto max-w-xl">
-            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-white xl:text-5xl">A clearer plan for every operating day.</h2>
-            <p className="mt-5 max-w-lg text-base leading-7 text-[#D0E0D9]">Bring expected generation, demand, storage limits, and critical-load priorities into one dispatch plan before the shift begins.</p>
-            <figure className="mt-12 border border-white/20 bg-[#0A2823]/65 p-6 backdrop-blur-sm">
-              <figcaption className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B6D5C7]"><span>Planning horizon</span><span className="font-mono font-medium tracking-normal text-white/65">00:00 → 24:00</span></figcaption>
-              <div className="relative mt-8 border-t border-white/35"><span className="absolute -top-1.5 left-0 h-3 w-px bg-[#D2E9DD]" /><span className="absolute -top-1.5 left-1/4 h-3 w-px bg-[#D2E9DD]" /><span className="absolute -top-1.5 left-1/2 h-3 w-px bg-[#D2E9DD]" /><span className="absolute -top-1.5 left-3/4 h-3 w-px bg-[#D2E9DD]" /><span className="absolute -top-1.5 right-0 h-3 w-px bg-[#D2E9DD]" /></div>
-              <div className="mt-3 grid grid-cols-4 gap-2 text-[11px] leading-4 text-[#E1EEE8]"><div><span className="block font-mono text-[#A8CDBD]">00–06</span>Reserve check</div><div><span className="block font-mono text-[#F4C97B]">06–14</span>Solar window</div><div><span className="block font-mono text-[#A8CDBD]">14–20</span>Demand handoff</div><div><span className="block font-mono text-[#8DB8ED]">20–24</span>Battery reserve</div></div>
-            </figure>
+            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-white xl:text-5xl">Plan the next day before the shift starts.</h2>
+            <p className="mt-5 max-w-lg text-base leading-7 text-[#D0E0D9]">Use the expected demand, renewable supply, and battery limits to prepare an hourly dispatch plan before the pressure is on.</p>
+            <div className="mt-12 max-w-lg border-l-2 border-[#F4C97B] pl-5">
+              <p className="text-sm font-semibold text-white">The operator stays in charge.</p>
+              <p className="mt-2 text-sm leading-6 text-[#C9DCD3]">GridMitra recommends a plan. It does not switch equipment or make the final call.</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3 border-t border-white/15 pt-6 text-xs text-[#B6D5C7]"><span className="h-2 w-2 rounded-full bg-[#91D1AE]" />Decision support only — operators stay in control.</div>
+          <p className="border-t border-white/15 pt-6 text-xs text-[#B6D5C7]">Designed around solar, wind, battery storage, diesel backup, and protected critical loads.</p>
         </div>
       </aside>
     </div>
