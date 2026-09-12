@@ -216,3 +216,34 @@ def test_csv_export_accepts_emergency_plan(monkeypatch) -> None:
     csv_response = client.post("/api/v1/optimize/export", json=result)
     assert csv_response.status_code == 200
     assert "P1_UNSERVED" in csv_response.text
+
+
+def test_p3_p4_shedding_returns_emergency_with_warnings(monkeypatch) -> None:
+    monkeypatch.setattr("app.services.persistence.save_run", _successful_save)
+    scenario = _demo_scenario()
+    for hour in scenario["hours"]:
+        hour["solar_available_kwh"] = 0
+        hour["wind_available_kwh"] = 0
+        hour["p1_demand_kwh"] = 0
+        hour["p2_demand_kwh"] = 0
+        hour["p3_demand_kwh"] = 10
+        hour["p4_demand_kwh"] = 10
+    battery = scenario["assets"]["battery"]
+    battery["initial_energy_kwh"] = battery["minimum_energy_kwh"]
+    battery["terminal_reserve_target_kwh"] = battery["minimum_energy_kwh"]
+    scenario["assets"]["diesel"]["maximum_kw"] = 5
+
+    response = client.post("/api/v1/optimize", json=scenario)
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "emergency_plan"
+    codes = {warning["code"] for warning in payload["warnings"]}
+    assert {"P3_REDUCED", "P4_REDUCED"} <= codes
+    assert "P1_UNSERVED" not in codes
+    explanation_codes = {explanation["code"] for explanation in payload["explanations"]}
+    assert {"P3_REDUCED", "P4_REDUCED"} <= explanation_codes
+    # serialization round-trip: export accepts and carries the new warning codes
+    csv_response = client.post("/api/v1/optimize/export", json=payload)
+    assert csv_response.status_code == 200
+    assert "P3_REDUCED" in csv_response.text
+    assert "P4_REDUCED" in csv_response.text

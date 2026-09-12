@@ -270,11 +270,18 @@ co2_kg
 
 ```text
 P1_UNSERVED
+P2_REDUCED
+P3_REDUCED
+P4_REDUCED
 RESERVE_SHORTFALL
 RENEWABLE_CURTAILMENT
 DATABASE_SAVE_FAILED
 FALLBACK_DATA_USED
 ```
+
+`P2_REDUCED`, `P3_REDUCED` and `P4_REDUCED` are emitted whenever the optimizer
+sheds load of that priority because supply is physically insufficient. Each is a
+`warning`. `P1_UNSERVED` remains `critical`.
 
 ## 6 Validation Error Contract
 
