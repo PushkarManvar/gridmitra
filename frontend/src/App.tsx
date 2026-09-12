@@ -13,12 +13,14 @@ import { ImpactComparison } from "./pages/ImpactComparison";
 import { History } from "./pages/History";
 import { Scenarios } from "./pages/Scenarios";
 import { ScenarioEditor } from "./pages/ScenarioEditor";
+import { Login } from "./pages/Login";
 
 function AppRoutes() {
   return (
     <BrowserRouter>
       <AppProvider>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route element={<Outlet />}>
             <Route path="/" element={<SiteSelection />} />
