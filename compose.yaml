@@ -30,6 +30,7 @@ services:
       - ./backend:/app
       - ./data:/app/data:ro
       - ./db:/app/db:ro
+      - ./firebase:/firebase:ro
     depends_on:
       db:
         condition: service_healthy
