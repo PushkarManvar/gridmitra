@@ -15,6 +15,13 @@ from app.services.constants import (
 _NAMESPACE = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 
+def _decode_json(value) -> dict:
+    """jsonb comes back as a dict from asyncpg or as a string from other drivers."""
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
+
+
 def _uuid(value: str) -> str:
     return str(uuid.uuid5(_NAMESPACE, value))
 
@@ -38,7 +45,7 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
     """
     site_uuid = _uuid(f"site:{request.site.site_id}")
     scenario_uuid = _uuid(f"scenario:{request.scenario_id}")
-    run_uuid = _uuid(f"run:{response.run_id}")
+    run_uuid = response.run_id
     start_time = _as_datetime(request.site.start_time, request.site.start_time)
 
     async with engine.begin() as connection:
@@ -257,3 +264,104 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
                     "evidence": json.dumps(explanation.evidence),
                 },
             )
+
+
+async def list_runs(limit: int = 20) -> list[dict]:
+    """List persisted runs newest first. Each item carries the parsed summary."""
+    async with engine.connect() as connection:
+        rows = await connection.execute(
+            text(
+                "select r.id, r.scenario_id, r.status, r.created_at, r.summary,"
+                "       s.name as scenario_name, s.scenario_type"
+                "  from gridmitra.optimization_runs r"
+                "  left join gridmitra.scenarios s on s.id = r.scenario_id"
+                "  order by r.created_at desc"
+                "  limit :limit"
+            ),
+            {"limit": limit},
+        )
+        runs = []
+        for row in rows:
+            mapping = dict(row._mapping)
+            runs.append(
+                {
+                    "run_id": str(mapping["id"]),
+                    "scenario_id": str(mapping["scenario_id"]) if mapping["scenario_id"] else None,
+                    "scenario_name": mapping["scenario_name"],
+                    "scenario_type": mapping["scenario_type"],
+                    "status": mapping["status"],
+                    "created_at": mapping["created_at"],
+                    "summary": _decode_json(mapping["summary"]),
+                }
+            )
+        return runs
+
+
+async def get_run(run_id: str) -> dict | None:
+    """Return a persisted run with dispatch hours and explanations, or None."""
+    async with engine.connect() as connection:
+        row = await connection.execute(
+            text(
+                "select r.id, r.scenario_id, r.status, r.solver_name, r.solver_status,"
+                "       r.model_version, r.input_snapshot, r.summary, r.baseline_summary,"
+                "       r.persistence_warning, r.created_at,"
+                "       s.name as scenario_name, s.scenario_type"
+                "  from gridmitra.optimization_runs r"
+                "  left join gridmitra.scenarios s on s.id = r.scenario_id"
+                "  where r.id = :id"
+            ),
+            {"id": run_id},
+        )
+        run_row = row.first()
+        if run_row is None:
+            return None
+        mapping = dict(run_row._mapping)
+
+        dispatch_rows = await connection.execute(
+            text(
+                "select hour_index, timestamp, result"
+                "  from gridmitra.dispatch_hours"
+                "  where run_id = :id order by hour_index"
+            ),
+            {"id": run_id},
+        )
+        dispatch_hours = [
+            _decode_json(row.result) for row in dispatch_rows
+        ]
+
+        explanation_rows = await connection.execute(
+            text(
+                "select hour_index, code, severity, message, evidence"
+                "  from gridmitra.decision_explanations"
+                "  where run_id = :id"
+                "  order by hour_index nulls last"
+            ),
+            {"id": run_id},
+        )
+        explanations = [
+            {
+                "hour_index": row.hour_index,
+                "code": row.code,
+                "severity": row.severity,
+                "message": row.message,
+                "evidence": _decode_json(row.evidence),
+            }
+            for row in explanation_rows
+        ]
+
+        return {
+            "run_id": str(mapping["id"]),
+            "scenario_id": str(mapping["scenario_id"]) if mapping["scenario_id"] else None,
+            "scenario_name": mapping["scenario_name"],
+            "scenario_type": mapping["scenario_type"],
+            "status": mapping["status"],
+            "solver_name": mapping["solver_name"],
+            "solver_status": mapping["solver_status"],
+            "model_version": mapping["model_version"],
+            "persistence_warning": mapping["persistence_warning"],
+            "created_at": mapping["created_at"],
+            "summary": _decode_json(mapping["summary"]),
+            "baseline_summary": _decode_json(mapping["baseline_summary"]),
+            "dispatch_hours": dispatch_hours,
+            "explanations": explanations,
+        }

@@ -11,6 +11,22 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: gridmitra
+          POSTGRES_USER: gridmitra
+          POSTGRES_PASSWORD: gridmitra_local_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gridmitra -d gridmitra"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://gridmitra:gridmitra_local_only@localhost:5432/gridmitra
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

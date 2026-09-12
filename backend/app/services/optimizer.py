@@ -151,7 +151,7 @@ def optimize_microgrid(request: OptimizationRequest) -> OptimizationResponse:
     status = "emergency_plan" if (p1_unserved > 0 or reserve_shortfall > 0) else "optimal"
 
     return OptimizationResponse(
-        run_id=f"run_{uuid.uuid4().hex[:12]}",
+        run_id=str(uuid.uuid4()),
         status=status,
         scenario_id=request.scenario_id,
         summary=summary,
