@@ -48,7 +48,7 @@ The starter repository implements a working, tested, offline-capable MVP:
 The demo (`jury-demo-v2`) is frozen. Phase B turns GridMitra into a multi-user product:
 
 - **Multi-user ownership** — users own their sites and scenarios (Decision 011).
-- **Session-cookie authentication** — FastAPI/PostgreSQL accounts, Argon2, httpOnly session cookie; a prepared demo account keeps the jury demo offline and one-click (Decision 012).
+- **Session-cookie authentication** — replaced by **Firebase Auth** (Decision 015). Manual auth removed; the API is open and offline-ready until Firebase is configured (Decision 012 superseded).
 - **Immutable run snapshots** — results are never rewritten by scenario edits (Decision 013).
 - **Editable inputs, immutable outputs** — full scenario editor for inputs; optimizer results stay read-only (Decision 014).
 - **Scenario CRUD + versions** — draft → validate → save version → run.

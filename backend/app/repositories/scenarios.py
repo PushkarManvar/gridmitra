@@ -6,6 +6,7 @@ import uuid
 from sqlalchemy import text
 
 from app.core.database import engine
+from app.repositories.owner import demo_owner_id
 
 
 def _decode_json(value) -> dict:
@@ -16,12 +17,12 @@ def _decode_json(value) -> dict:
 
 
 async def save_scenario_version(
-    owner_id: str,
     name: str,
     scenario_type: str,
     payload: dict,
 ) -> int:
-    """Save the next immutable version of (owner, name). Returns the version."""
+    """Save the next immutable version of the scenario. Returns the version."""
+    owner_id = await demo_owner_id()
     async with engine.begin() as connection:
         row = await connection.execute(
             text(
@@ -50,8 +51,9 @@ async def save_scenario_version(
     return next_version
 
 
-async def list_scenarios(owner_id: str) -> list[dict]:
-    """List the latest saved version of each scenario for the owner."""
+async def list_scenarios() -> list[dict]:
+    """List the latest saved version of each scenario."""
+    owner_id = await demo_owner_id()
     async with engine.connect() as connection:
         rows = await connection.execute(
             text(
@@ -79,10 +81,9 @@ async def list_scenarios(owner_id: str) -> list[dict]:
         ]
 
 
-async def get_scenario_version(
-    owner_id: str, name: str, version: int | None = None
-) -> dict | None:
+async def get_scenario_version(name: str, version: int | None = None) -> dict | None:
     """Fetch a specific version (default latest) of a scenario."""
+    owner_id = await demo_owner_id()
     async with engine.connect() as connection:
         params = {"owner_id": owner_id, "name": name}
         if version is None:

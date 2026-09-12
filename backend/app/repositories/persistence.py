@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.core.database import engine
 from app.models import OptimizationRequest, OptimizationResponse
+from app.repositories.owner import demo_owner_id
 from app.services.constants import (
     MODEL_VERSION,
     SCENARIO_SOURCE_DEFAULT,
@@ -36,15 +37,14 @@ def _as_datetime(value: str, site_start: str, hour_index: int | None = None) -> 
     return start + timedelta(hours=hour_index or 0)
 
 
-async def save_run(
-    request: OptimizationRequest, response: OptimizationResponse, owner_id: str
-) -> None:
+async def save_run(request: OptimizationRequest, response: OptimizationResponse) -> None:
     """Persist a calculated run in one transaction.
 
     Saves the site, site assets, scenario, 24 scenario hours, the run summary,
     the 24 dispatch hours and the decision explanations atomically. Raises on
     failure; the caller decides how to degrade gracefully.
     """
+    owner_id = await demo_owner_id()
     site_uuid = _uuid(f"site:{request.site.site_id}")
     scenario_uuid = _uuid(f"scenario:{request.scenario_id}")
     run_uuid = response.run_id

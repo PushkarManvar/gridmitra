@@ -202,6 +202,22 @@ The optimizer is the source of truth for results; allowing manual edits would br
 
 The scenario editor writes inputs only. Validation happens before every optimization. Safety penalty values stay backend-controlled.
 
+## Decision 015 Firebase Auth (replaces 012)
+
+### Decision
+
+Use **Firebase Auth** instead of the FastAPI/PostgreSQL session-cookie accounts described in Decision 012. The manual auth implementation (Argon2, users/sessions, cookie) has been removed.
+
+### Reason
+
+Firebase Auth provides a fast, maintained identity layer (Google sign-in, email/password) with hosted UI, which the team prefers over hand-rolled sessions. The core demo remains offline until a Firebase project is configured.
+
+### Consequence
+
+- Until Firebase is wired, the API is open (no auth gate) and all runs/scenarios are owned by the seeded demo operator.
+- A Firebase ID token will be verified per request once integrated; ownership maps to the Firebase user id.
+- Decision 011 (multi-user ownership) stays — the `owner_id` columns remain and will be populated from Firebase.
+
 ## Decision Change Format
 
 When changing a decision, append a new section containing:
