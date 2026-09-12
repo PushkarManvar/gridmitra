@@ -67,18 +67,18 @@ export function Sidebar() {
       </div>
 
       <div className="flex flex-col gap-1 border-t border-outline-variant pt-3 px-1">
-        <button className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
+        <Link to="/documentation" className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
           <span className="material-symbols-outlined text-[16px]">menu_book</span>
           <span>Documentation</span>
-        </button>
-        <button className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
+        </Link>
+        <Link to="/settings" className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
           <span className="material-symbols-outlined text-[16px]">settings</span>
           <span>Settings</span>
-        </button>
-        <button className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
+        </Link>
+        <Link to="/support" className="flex items-center gap-3 px-3 py-1.5 text-secondary hover:text-on-surface text-xs rounded-lg transition-colors w-full">
           <span className="material-symbols-outlined text-[16px]">help_outline</span>
           <span>Support</span>
-        </button>
+        </Link>
       </div>
     </aside>
   );

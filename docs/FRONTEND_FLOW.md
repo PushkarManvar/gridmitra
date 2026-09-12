@@ -22,13 +22,22 @@ Load demo community
 
 | Route | Page | MVP priority |
 |---|---|---|
-| `/` | Demo and site selection | Required |
-| `/dashboard` | Overview dashboard | Required |
+| `/` | Product landing | Required (public) |
+| `/about` | Problem, solution, architecture, limitations, team | Required (public) |
+| `/login` | Sign-in with one-click demo account | Required (public) |
+| `/select` | Demo and site selection | Required |
+| `/overview` | Overview dashboard | Required |
 | `/configuration` | Microgrid configuration | Required |
 | `/forecast` | Forecast and demand | Required |
 | `/dispatch` | Dispatch results | Required |
-| `/scenarios` | Scenario lab | Required |
-| `/history` | Saved runs | Optional |
+| `/scenarios` | Saved scenario drafts (owner-scoped versions) | Required (Phase B) |
+| `/scenarios/edit` | Scenario editor — editable inputs only | Required (Phase B) |
+| `/scenario-lab` | Scenario lab | Required |
+| `/impact` | Impact comparison | Required |
+| `/history` | Saved runs | Required |
+| `/documentation` | Documentation | Required (Phase B) |
+| `/settings` | Profile, role, sign out | Required (Phase B) |
+| `/support` | FAQ / support | Required (Phase B) |
 
 ## 4 Shared Layout
 

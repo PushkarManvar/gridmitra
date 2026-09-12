@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export function Login() {
@@ -72,6 +73,9 @@ export function Login() {
         {error && (
           <p className="mt-4 text-xs text-error bg-error/10 border border-error/30 rounded-lg p-3">{error}</p>
         )}
+        <p className="mt-5 text-center text-[11px] text-secondary">
+          <Link to="/" className="hover:underline">← Back to GridMitra</Link>
+        </p>
       </div>
     </div>
   );
