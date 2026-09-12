@@ -101,9 +101,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const restorePrepared = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Restore the committed prepared scenario WITHOUT optimizing or writing a
+      // run — switching back from live weather must never create history silently.
+      const demo = await getDemoScenario();
+      setScenario(demo);
+      setResult(null);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not load the demo");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value = useMemo(
-    () => ({ scenario, result, loading, error, loadDemo, run, reset: loadDemo }),
-    [scenario, result, loading, error, loadDemo, run],
+    () => ({
+      scenario,
+      result,
+      loading,
+      error,
+      loadDemo,
+      run,
+      restorePrepared,
+      reset: restorePrepared,
+    }),
+    [scenario, result, loading, error, loadDemo, run, restorePrepared],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

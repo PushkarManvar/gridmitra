@@ -31,7 +31,7 @@ const SOURCE_BADGE: Record<WeatherForecast["source"], { label: string; className
 
 export function Forecast() {
   const navigate = useNavigate();
-  const { scenario, error, reset, run } = useApp();
+  const { scenario, error, restorePrepared, run } = useApp();
   const [lat, setLat] = useState<string>(String(scenario?.site.latitude ?? 23.0225));
   const [lon, setLon] = useState<string>(String(scenario?.site.longitude ?? 72.5714));
   const [tilt, setTilt] = useState<string>(String(scenario?.site.panel_tilt_degrees ?? 23));
@@ -171,7 +171,7 @@ export function Forecast() {
                 onClick={() => {
                   setWeather(null);
                   setLastUpdated(null);
-                  void reset();
+                  void restorePrepared();
                 }}
                 className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-lowest border border-outline-variant text-on-surface text-xs font-semibold rounded-lg hover:bg-surface-container transition-colors"
               >

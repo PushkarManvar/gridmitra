@@ -29,8 +29,8 @@ export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: Batter
         textStyle: { fontFamily: 'Geist, sans-serif', fontSize: 12, color: '#52605D' },
       },
       grid: {
-        left: '2%',
-        right: '2%',
+        left: '12%',
+        right: '4%',
         top: '10%',
         bottom: '15%',
         containLabel: true,
@@ -46,8 +46,10 @@ export function BatterySOCChart({ hours, reserveTargetKwh, capacityKwh }: Batter
       yAxis: {
         type: 'value',
         name: 'Battery energy (kWh)',
+        nameLocation: 'middle',
+        nameGap: 36,
         max: capacityKwh,
-        nameTextStyle: { color: '#7C8B87', fontFamily: 'Geist, sans-serif', padding: [0, 0, 0, 20] },
+        nameTextStyle: { color: '#7C8B87', fontFamily: 'Geist, sans-serif', fontSize: 11 },
         axisLabel: { color: '#7C8B87', fontFamily: 'JetBrains Mono', fontSize: 11 },
         splitLine: { lineStyle: { type: 'dashed', color: '#EDE9E0' } },
       },

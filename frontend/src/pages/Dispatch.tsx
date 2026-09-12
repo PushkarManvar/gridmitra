@@ -6,12 +6,87 @@ import { PersistenceNotice } from "../components/ui/PersistenceNotice";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { WarningPanel } from "../components/ui/WarningPanel";
 import { exportCsv } from "../lib/api";
+import type { BatteryConfig, DispatchHour, OptimizationSummary } from "../types/index";
+
+const EPSILON = 1e-6;
 
 function currencySymbol(currency: string): string {
   if (currency === "INR") return "₹";
   if (currency === "USD") return "$";
   if (currency === "EUR") return "€";
   return "";
+}
+
+function buildHourExplanation(
+  hour: DispatchHour,
+  battery: BatteryConfig,
+  summary: OptimizationSummary,
+): Array<{ label: string; text: string }> {
+  const demand =
+    hour.p1_demand_kwh + hour.p2_demand_kwh + hour.p3_demand_kwh + hour.p4_demand_kwh;
+  const served =
+    hour.p1_served_kwh + hour.p2_served_kwh + hour.p3_served_kwh + hour.p4_served_kwh;
+  const unservedTotal = Math.max(0, demand - served);
+
+  const supplyParts: string[] = [];
+  if (hour.solar_used_kwh > EPSILON) supplyParts.push(`solar ${hour.solar_used_kwh.toFixed(1)} kWh`);
+  if (hour.wind_used_kwh > EPSILON) supplyParts.push(`wind ${hour.wind_used_kwh.toFixed(1)} kWh`);
+  if (hour.battery_discharge_kwh > EPSILON)
+    supplyParts.push(`battery discharge ${hour.battery_discharge_kwh.toFixed(1)} kWh`);
+  if (hour.diesel_generation_kwh > EPSILON)
+    supplyParts.push(`diesel ${hour.diesel_generation_kwh.toFixed(1)} kWh`);
+  const what =
+    `Demand was ${demand.toFixed(1)} kWh. ` +
+    (supplyParts.length
+      ? `Supplied by ${supplyParts.join(", ")}.`
+      : "No generation was dispatched this hour.") +
+    (unservedTotal > EPSILON ? ` ${unservedTotal.toFixed(2)} kWh went unserved.` : "");
+
+  const reasons: string[] = [];
+  if (hour.solar_available_kwh <= EPSILON) reasons.push("no solar availability");
+  if (hour.wind_available_kwh <= EPSILON)
+    reasons.push("wind below the 3 m/s turbine cut-in");
+  if (hour.diesel_generation_kwh > EPSILON)
+    reasons.push("renewable supply and permitted battery discharge were insufficient");
+  if (unservedTotal > EPSILON) reasons.push("total available supply was physically insufficient");
+  if (hour.renewable_curtailment_kwh > EPSILON)
+    reasons.push("demand and battery charging were already satisfied");
+  const why =
+    reasons.length > 0
+      ? reasons.join("; ") + "."
+      : "Solar and wind met demand within battery and diesel limits.";
+
+  let batteryBlock: string;
+  if (hour.battery_charge_kwh > EPSILON) {
+    batteryBlock = `Charged ${hour.battery_charge_kwh.toFixed(1)} kWh using surplus renewable energy.`;
+  } else if (hour.battery_discharge_kwh > EPSILON) {
+    batteryBlock = `Discharged ${hour.battery_discharge_kwh.toFixed(1)} kWh to help meet demand.`;
+  } else {
+    batteryBlock = `Idle — battery energy was preserved for later demand and the ${battery.terminal_reserve_target_kwh.toFixed(0)} kWh terminal reserve.`;
+  }
+  if (hour.battery_energy_end_kwh < battery.terminal_reserve_target_kwh - EPSILON) {
+    batteryBlock += ` Energy is below the reserve target this hour (${hour.battery_energy_end_kwh.toFixed(1)} kWh).`;
+  }
+
+  let resultBlock: string;
+  if (unservedTotal <= EPSILON) {
+    resultBlock = "All P1–P4 demand was served this hour.";
+  } else {
+    const unservedParts = (["p1", "p2", "p3", "p4"] as const)
+      .filter((priority) => hour[`${priority}_unserved_kwh`] > EPSILON)
+      .map((priority) => `${priority.toUpperCase()} ${hour[`${priority}_unserved_kwh`].toFixed(2)} kWh`);
+    resultBlock = `${unservedTotal.toFixed(2)} kWh unserved: ${unservedParts.join(", ")}.`;
+  }
+  if (summary.reserve_shortfall_kwh > EPSILON) {
+    resultBlock += ` Terminal reserve shortfall: ${summary.reserve_shortfall_kwh.toFixed(2)} kWh.`;
+  }
+
+  return [
+    { label: "What happened", text: what },
+    { label: "Why", text: why },
+    { label: "Battery decision", text: batteryBlock },
+    { label: "Result", text: resultBlock },
+  ];
 }
 
 export function Dispatch() {
@@ -63,6 +138,10 @@ export function Dispatch() {
   const wholeRunExplanations = result.explanations.filter(
     (explanation) => explanation.hour_index === null,
   );
+  const selectedHourData =
+    selectedHour === null
+      ? null
+      : result.dispatch_hours.find((hour) => hour.hour_index === selectedHour) ?? null;
 
   const handleExport = async () => {
     setExporting(true);
@@ -191,6 +270,18 @@ export function Dispatch() {
                   {selectedHour === null ? "All hours" : `Hour ${selectedHour}:00`}
                 </span>
               </div>
+              {selectedHourData && (
+                <div className="mb-3 flex flex-col gap-2">
+                  {buildHourExplanation(selectedHourData, battery, s).map((block) => (
+                    <div key={block.label} className="p-2.5 rounded-lg bg-[#F7F4EC] border border-[#E2DDD2]">
+                      <div className="text-[10px] font-mono uppercase text-primary font-semibold mb-0.5">
+                        {block.label}
+                      </div>
+                      <p className="text-xs text-on-surface leading-relaxed">{block.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               {wholeRunExplanations.map((explanation) => (
                 <div key={explanation.code} className={`mb-2 p-2.5 rounded-lg text-xs ${explanation.severity === "critical" ? "bg-error/10 border border-error/30" : explanation.severity === "warning" ? "bg-[#FFFBEB] border border-[#F59E0B]/30" : "bg-[#F7F4EC] border border-[#E2DDD2]"}`}>
                   <div className="text-[10px] font-mono uppercase text-secondary mb-0.5">{explanation.code}</div>

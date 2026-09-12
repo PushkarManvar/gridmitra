@@ -37,6 +37,8 @@ def test_get_run_round_trip(client) -> None:
     # the exact inputs it was computed from (A5), not the current scenario.
     assert body["input_snapshot"]["scenario_id"] == scenario["scenario_id"]
     assert len(body["input_snapshot"]["hours"]) == 24
+    # scenario_name comes from the run's immutable snapshot, not the live table
+    assert body["scenario_name"] == scenario["scenario_name"]
 
 
 def test_unknown_run_returns_404(client) -> None:
