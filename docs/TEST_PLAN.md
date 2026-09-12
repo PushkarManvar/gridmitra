@@ -208,7 +208,8 @@ Load demo → review input → optimize → inspect results → explain an hour 
 
 ```text
 Load demo → reduce solar → increase evening demand → degrade battery
-→ optimize → display emergency warnings if calculated → explain response
+→ optimize → display emergency warnings if calculated (now includes P2_REDUCED,
+P3_REDUCED and P4_REDUCED whenever load is shed) → explain response
 ```
 
 ### E03 Offline data path

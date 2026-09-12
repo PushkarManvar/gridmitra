@@ -294,3 +294,123 @@ def test_baseline_is_deterministic() -> None:
     assert compute_baseline_summary(request).model_dump() == compute_baseline_summary(
         request
     ).model_dump()
+
+
+# ---- BUG 1 / BUG 2 regression: any shedding is an emergency plan, with
+#      explanations and warnings for P4/P3/P2 reduction ----
+
+
+def _shedding_payload(
+    *,
+    p1: float = 0.0,
+    p2: float = 0.0,
+    p3: float = 0.0,
+    p4: float = 0.0,
+    diesel_max: float = 5.0,
+) -> dict:
+    payload = load_demo().model_dump()
+    zero_renewables(payload)
+    for hour in payload["hours"]:
+        hour["p1_demand_kwh"] = p1
+        hour["p2_demand_kwh"] = p2
+        hour["p3_demand_kwh"] = p3
+        hour["p4_demand_kwh"] = p4
+    battery = payload["assets"]["battery"]
+    battery["initial_energy_kwh"] = battery["minimum_energy_kwh"]
+    battery["terminal_reserve_target_kwh"] = battery["minimum_energy_kwh"]
+    payload["assets"]["diesel"]["maximum_kw"] = diesel_max
+    return payload
+
+
+def _codes(items) -> set[str]:
+    return {item.code for item in items}
+
+
+def test_status_emergency_for_p4_only_shedding() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p4=10.0))
+    )
+    assert result.status == "emergency_plan"
+    assert result.summary.p4_unserved_kwh > EPSILON
+    assert result.summary.p3_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert result.summary.p2_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert result.summary.p1_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert "P4_REDUCED" in _codes(result.warnings)
+    assert "P3_REDUCED" not in _codes(result.warnings)
+    assert "P2_REDUCED" not in _codes(result.warnings)
+    assert "P4_REDUCED" in _codes(result.explanations)
+
+
+def test_status_emergency_for_p3_shedding() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p3=10.0))
+    )
+    assert result.status == "emergency_plan"
+    assert result.summary.p3_unserved_kwh > EPSILON
+    assert result.summary.p4_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert result.summary.p2_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert "P3_REDUCED" in _codes(result.warnings)
+    assert "P3_REDUCED" in _codes(result.explanations)
+    assert "P4_REDUCED" not in _codes(result.warnings)
+
+
+def test_status_emergency_for_p2_shedding() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p2=10.0))
+    )
+    assert result.status == "emergency_plan"
+    assert result.summary.p2_unserved_kwh > EPSILON
+    assert result.summary.p1_unserved_kwh == pytest.approx(0, abs=EPSILON)
+    assert "P2_REDUCED" in _codes(result.warnings)
+    assert "P2_REDUCED" in _codes(result.explanations)
+
+
+def test_status_emergency_for_p3_and_p4_shedding_with_priority_order() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p3=10.0, p4=10.0))
+    )
+    assert result.status == "emergency_plan"
+    # priority order unchanged: P4 is fully shed before P3 is touched
+    assert result.summary.p4_unserved_kwh == pytest.approx(10.0 * 24, abs=1)
+    assert result.summary.p3_unserved_kwh == pytest.approx(5.0 * 24, abs=1)
+    assert "P4_REDUCED" in _codes(result.warnings)
+    assert "P3_REDUCED" in _codes(result.warnings)
+    assert (result.summary.p3_unserved_kwh + result.summary.p4_unserved_kwh) == pytest.approx(
+        15.0 * 24, abs=1
+    )
+
+
+def test_explanation_kwh_matches_dispatch_totals() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p3=8.0, p4=6.0))
+    )
+    explained_p3 = sum(
+        item.evidence.get("p3_unserved_kwh", 0.0)
+        for item in result.explanations
+        if item.code == "P3_REDUCED"
+    )
+    explained_p4 = sum(
+        item.evidence.get("p4_unserved_kwh", 0.0)
+        for item in result.explanations
+        if item.code == "P4_REDUCED"
+    )
+    assert explained_p3 == pytest.approx(result.summary.p3_unserved_kwh, abs=1e-3)
+    assert explained_p4 == pytest.approx(result.summary.p4_unserved_kwh, abs=1e-3)
+
+
+def test_no_reduction_warning_when_nothing_shed() -> None:
+    result = optimize_microgrid(load_demo())
+    assert result.status == "optimal"
+    reduced_codes = ("P4_REDUCED", "P3_REDUCED", "P2_REDUCED")
+    assert not any(code in _codes(result.warnings) for code in reduced_codes)
+
+
+def test_p1_unserved_still_critical_with_explanation() -> None:
+    result = optimize_microgrid(
+        OptimizationRequest.model_validate(_shedding_payload(p1=10.0, diesel_max=5.0))
+    )
+    assert result.status == "emergency_plan"
+    assert result.summary.p1_unserved_kwh > EPSILON
+    p1_warnings = [w for w in result.warnings if w.code == "P1_UNSERVED"]
+    assert p1_warnings and p1_warnings[0].severity == "critical"
+    assert any(e.code == "P1_UNSERVED" and e.severity == "critical" for e in result.explanations)

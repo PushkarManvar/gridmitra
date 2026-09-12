@@ -63,8 +63,8 @@ Invalid input is rejected with HTTP 422 before any solver runs.
 - `run_id`: server-generated UUID string. It is also the database primary key of the persisted run and the CSV filename.
 
 - `status`: normalized solver outcome only. Raw CBC strings are never exposed.
-  - `optimal`: solved to optimality with no P1 or terminal-reserve violation.
-  - `emergency_plan`: solved, but P1 demand or terminal reserve could not be fully met within physical limits; unmet-load warnings are returned instead of a failure.
+  - `optimal`: solved to optimality with no unserved load (P1-P4) and no terminal-reserve violation.
+  - `emergency_plan`: solved, but any load (P1-P4) or the terminal reserve could not be fully met within physical limits; unmet-load warnings are returned instead of a failure.
   - `failed`: no usable dispatch; the response contains no `dispatch_hours` values.
 - `summary` and `baseline_summary`: calculated KPIs per `DATA_CONTRACT.md` §5.2 — `total_demand_kwh`, `total_served_kwh`, `total_unserved_kwh`, `p1_unserved_kwh` through `p4_unserved_kwh`, `diesel_energy_kwh`, `diesel_fuel_l`, `fuel_cost`, `co2_kg`, `renewable_available_kwh`, `renewable_used_kwh`, `renewable_curtailment_kwh`, `renewable_share_percent`, `p1_reliability_percent`, `final_battery_energy_kwh`, `reserve_shortfall_kwh`.
 - `dispatch_hours`: array, exactly 24 entries per `DATA_CONTRACT.md` §5.3, with units in every field name.
@@ -77,12 +77,18 @@ Invalid input is rejected with HTTP 422 before any solver runs.
 Standardized codes per `DATA_CONTRACT.md` §5.5:
 
 - `P1_UNSERVED` — critical P1 demand could not be fully served.
+- `P4_REDUCED` — flexible P4 demand was shed to protect higher priorities.
+- `P3_REDUCED` — P3 demand was shed to protect higher priorities.
+- `P2_REDUCED` — P2 demand was shed to protect higher priorities.
 - `RESERVE_SHORTFALL` — terminal battery reserve target could not be met.
 - `RENEWABLE_CURTAILMENT` — available renewable energy was curtailed.
 - `DATABASE_SAVE_FAILED` — the result is valid but could not be persisted.
 - `FALLBACK_DATA_USED` — simulated data was used in place of live input.
 
-The UI must show a warning whenever `p1_unserved_kwh` or `reserve_shortfall_kwh` is greater than zero.
+Any unserved priority (P1-P4) or reserve shortfall makes the status
+`emergency_plan`. The UI must render every warning in the `warnings` array and
+must always show a warning whenever `p1_unserved_kwh` or `reserve_shortfall_kwh`
+is greater than zero.
 
 ## `POST /api/v1/optimize/export`
 

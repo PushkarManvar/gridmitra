@@ -2,6 +2,9 @@ import { useState } from "react";
 import { DispatchChart } from "../charts/DispatchChart";
 import { BatterySOCChart } from "../charts/BatterySOCChart";
 import { useApp } from "../context/AppContext";
+import { PersistenceNotice } from "../components/ui/PersistenceNotice";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { WarningPanel } from "../components/ui/WarningPanel";
 import { exportCsv } from "../lib/api";
 
 function currencySymbol(currency: string): string {
@@ -27,7 +30,6 @@ export function Dispatch() {
   const currency = currencySymbol(scenario.site.currency);
   const { battery } = scenario.assets;
   const s = result.summary;
-  const hasWarning = s.p1_unserved_kwh > 0 || s.reserve_shortfall_kwh > 0;
 
   const hourExplanations = result.explanations.filter(
     (explanation) => explanation.hour_index !== null,
@@ -70,10 +72,7 @@ export function Dispatch() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-bold text-primary">Dispatch Planner</h1>
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${result.status === "optimal" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  {result.status.replace("_", " ")}
-                </span>
+                <StatusBadge status={result.status} />
               </div>
               <p className="text-xs text-secondary mt-1">
                 Optimized 24-hour energy allocation. Run <span className="font-mono">{result.run_id.slice(0, 8)}</span> · Scenario: {scenario.scenario_name}.
@@ -91,12 +90,8 @@ export function Dispatch() {
             </div>
           </div>
 
-          {hasWarning && (
-            <section className="rounded-xl border border-[#F59E0B]/40 bg-[#FFFBEB] p-3.5 text-xs text-[#92400E]">
-              <strong>Reliability warning.</strong> P1 unserved {s.p1_unserved_kwh.toFixed(2)} kWh · Reserve shortfall{" "}
-              {s.reserve_shortfall_kwh.toFixed(2)} kWh. This is the least-harm plan within physical limits.
-            </section>
-          )}
+          <WarningPanel warnings={result.warnings} />
+          <PersistenceNotice persistence={result.persistence} />
 
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
             {kpis.map(([label, value, detail]) => (

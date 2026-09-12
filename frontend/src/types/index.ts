@@ -15,6 +15,17 @@ export type RunStatus = "optimal" | "emergency_plan" | "failed";
 
 export type Severity = "info" | "warning" | "critical";
 
+export type WarningCode =
+  | "P1_UNSERVED"
+  | "P2_REDUCED"
+  | "P3_REDUCED"
+  | "P4_REDUCED"
+  | "RESERVE_SHORTFALL"
+  | "RENEWABLE_CURTAILMENT"
+  | "DATABASE_SAVE_FAILED"
+  | "FALLBACK_DATA_USED"
+  | (string & Record<never, never>);
+
 export interface Site {
   site_id: string;
   site_name: string;
@@ -146,7 +157,7 @@ export interface Explanation {
 }
 
 export interface Warning {
-  code: string;
+  code: WarningCode;
   severity: Severity;
   message: string;
   hour_index: number | null;

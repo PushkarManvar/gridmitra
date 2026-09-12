@@ -1,6 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { EnergyOutlookChart } from "../charts/EnergyOutlookChart";
 import { useApp } from "../context/AppContext";
+import { PersistenceNotice } from "../components/ui/PersistenceNotice";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { WarningPanel } from "../components/ui/WarningPanel";
 
 function currencySymbol(currency: string): string {
   if (currency === "INR") return "₹";
@@ -34,8 +37,6 @@ export function Overview() {
   const p1Demand = scenario.hours.reduce((sum, h) => sum + h.p1_demand_kwh, 0);
   const socPct = (battery.initial_energy_kwh / battery.capacity_kwh) * 100;
   const reservePct = (battery.terminal_reserve_target_kwh / battery.capacity_kwh) * 100;
-  const hasWarning =
-    result.summary.p1_unserved_kwh > 0 || result.summary.reserve_shortfall_kwh > 0;
 
   return (
     <div className="min-h-screen bg-surface-container-lowest">
@@ -62,19 +63,13 @@ export function Overview() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-secondary uppercase font-semibold text-[10px]">RUN</span>
               <span className="font-mono text-on-surface font-medium">{result.run_id.slice(0, 8)}</span>
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${result.status === "optimal" ? "bg-[#ECFDF5] text-[#065F46]" : "bg-[#FEF3C7] text-[#92400E]"}`}>
-                {result.status.replace("_", " ")}
-              </span>
+              <StatusBadge status={result.status} />
             </div>
           </div>
         </section>
 
-        {hasWarning && (
-          <section className="rounded-2xl border border-[#F59E0B]/40 bg-[#FFFBEB] p-4 text-xs text-[#92400E]">
-            <strong>Reliability warning.</strong> P1 unserved: {result.summary.p1_unserved_kwh.toFixed(2)} kWh · Reserve shortfall:{" "}
-            {result.summary.reserve_shortfall_kwh.toFixed(2)} kWh. Review the dispatch plan before accepting.
-          </section>
-        )}
+        <WarningPanel warnings={result.warnings} />
+        <PersistenceNotice persistence={result.persistence} />
 
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-surface-container-lowest border border-[#E7E3D8] rounded-xl p-4 flex flex-col justify-between shadow-xs">
