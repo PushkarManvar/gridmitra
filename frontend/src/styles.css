@@ -39,3 +39,16 @@ button:focus-visible {
   font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
 }
+
+.documentation-page {
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.documentation-page h1,
+.documentation-page h2,
+.documentation-page h3,
+.documentation-page .doc-title {
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+}
