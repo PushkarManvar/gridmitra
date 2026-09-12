@@ -13,6 +13,9 @@ import { ImpactComparison } from "./pages/ImpactComparison";
 import { History } from "./pages/History";
 import { Scenarios } from "./pages/Scenarios";
 import { ScenarioEditor } from "./pages/ScenarioEditor";
+import { Documentation } from "./pages/Documentation";
+import { Settings } from "./pages/Settings";
+import { Support } from "./pages/Support";
 import { Login } from "./pages/Login";
 import { useAuth } from "./context/AuthContext";
 
@@ -55,6 +58,9 @@ function AppRoutes() {
               <Route path="/scenarios/edit" element={<ScenarioEditor />} />
               <Route path="/impact" element={<ImpactComparison />} />
               <Route path="/history" element={<History />} />
+              <Route path="/documentation" element={<Documentation />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/support" element={<Support />} />
               <Route path="*" element={<Navigate to="/overview" replace />} />
             </Route>
           </Route>
