@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class ScenarioType(str, Enum):
@@ -16,6 +16,25 @@ class ScenarioType(str, Enum):
 
 Severity = Literal["info", "warning", "critical"]
 RunStatus = Literal["optimal", "emergency_plan", "failed"]
+UserRole = Literal["admin", "operator", "viewer"]
+
+
+class User(BaseModel):
+    user_id: str
+    email: str
+    display_name: str
+    role: UserRole
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    display_name: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class Site(BaseModel):

@@ -36,7 +36,9 @@ def _as_datetime(value: str, site_start: str, hour_index: int | None = None) -> 
     return start + timedelta(hours=hour_index or 0)
 
 
-async def save_run(request: OptimizationRequest, response: OptimizationResponse) -> None:
+async def save_run(
+    request: OptimizationRequest, response: OptimizationResponse, owner_id: str
+) -> None:
     """Persist a calculated run in one transaction.
 
     Saves the site, site assets, scenario, 24 scenario hours, the run summary,
@@ -51,12 +53,13 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
     async with engine.begin() as connection:
         await connection.execute(
             text(
-                "insert into gridmitra.sites (id, name, timezone, currency) "
-                "values (:id, :name, :timezone, :currency) "
+                "insert into gridmitra.sites (id, name, timezone, currency, owner_id) "
+                "values (:id, :name, :timezone, :currency, :owner_id) "
                 "on conflict (id) do update set "
                 "  name = excluded.name,"
                 "  timezone = excluded.timezone,"
                 "  currency = excluded.currency,"
+                "  owner_id = excluded.owner_id,"
                 "  updated_at = now()"
             ),
             {
@@ -64,6 +67,7 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
                 "name": request.site.site_name,
                 "timezone": request.site.timezone,
                 "currency": request.site.currency,
+                "owner_id": owner_id,
             },
         )
 
@@ -134,11 +138,11 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
                 "insert into gridmitra.scenarios ("
                 "  id, site_id, name, scenario_type, start_time, interval_hours,"
                 "  initial_battery_energy_kwh, terminal_reserve_target_kwh,"
-                "  fuel_price_per_l, carbon_price_per_kg_co2, source"
+                "  fuel_price_per_l, carbon_price_per_kg_co2, source, owner_id"
                 ") values ("
                 "  :id, :site_id, :name, :scenario_type, :start_time, :interval_hours,"
                 "  :initial_battery_energy_kwh, :terminal_reserve_target_kwh,"
-                "  :fuel_price_per_l, :carbon_price_per_kg_co2, :source"
+                "  :fuel_price_per_l, :carbon_price_per_kg_co2, :source, :owner_id"
                 ") on conflict (id) do update set"
                 "  name = excluded.name,"
                 "  scenario_type = excluded.scenario_type,"
@@ -148,7 +152,8 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
                 "  terminal_reserve_target_kwh = excluded.terminal_reserve_target_kwh,"
                 "  fuel_price_per_l = excluded.fuel_price_per_l,"
                 "  carbon_price_per_kg_co2 = excluded.carbon_price_per_kg_co2,"
-                "  source = excluded.source"
+                "  source = excluded.source,"
+                "  owner_id = excluded.owner_id"
             ),
             {
                 "id": scenario_uuid,
@@ -162,6 +167,7 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
                 "fuel_price_per_l": request.assets.diesel.fuel_price_per_l,
                 "carbon_price_per_kg_co2": request.operating_policy.carbon_price_per_kg_co2,
                 "source": SCENARIO_SOURCE_DEFAULT,
+                "owner_id": owner_id,
             },
         )
 

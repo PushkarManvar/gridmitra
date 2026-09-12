@@ -174,6 +174,23 @@ Response:
 - Provider failure with no cache returns HTTP `503` `{"error": {"code": "WEATHER_UNAVAILABLE", "message": "Live weather is unavailable. Use prepared data."}}`. A failed weather fetch never fails optimization.
 - Demand values are not returned — weather does not provide community P1–P4 demand.
 
+## Auth endpoints (Phase B)
+
+Authentication uses an `httpOnly`, `Secure`, `SameSite=Lax` session cookie named `gridmitra_session`. Passwords are hashed with Argon2.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/v1/auth/register` | Create a user (email, display_name, password, role default `operator`) |
+| POST | `/api/v1/auth/login` | Exchange credentials for a session cookie |
+| POST | `/api/v1/auth/logout` | Destroy the current session |
+| GET | `/api/v1/auth/me` | Current user or 401 |
+
+`login` body: `{"email": "...", "password": "..."}` → `200` with the `User` object and a session cookie; `401` on bad credentials. `register` validates email format and password length (≥ 8).
+
+Every other route requires a valid session. Writes (`/optimize`, scenario CRUD, weather apply) require `admin` or `operator`; `viewer` may read history and export. Unauthorized requests return `401 UNAUTHORIZED`; forbidden writes return `403 FORBIDDEN`.
+
+A prepared demo account (`demo@gridmitra.com` / `demo-pass-1234`, role `operator`) is seeded in migration 002 so the offline jury demo works with one click.
+
 ## Error responses
 
 ### Validation failure — HTTP 422

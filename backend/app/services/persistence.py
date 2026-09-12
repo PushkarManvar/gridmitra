@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 async def persist_run(
     request: OptimizationRequest,
     response: OptimizationResponse,
+    owner_id: str,
 ) -> tuple[Persistence, list[Warning]]:
     """Save a calculated run and degrade gracefully when the database is down.
 
@@ -16,7 +17,7 @@ async def persist_run(
     `persistence.saved = false` plus a `DATABASE_SAVE_FAILED` warning.
     """
     try:
-        await save_run(request, response)
+        await save_run(request, response, owner_id=owner_id)
     except Exception:
         logger.exception("persistence save failed; returning calculated result")
         return (

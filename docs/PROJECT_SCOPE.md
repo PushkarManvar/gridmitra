@@ -37,13 +37,24 @@ The starter repository implements a working, tested, offline-capable MVP:
 
 ## Planned enhancements (next iterations)
 
-The MVP is deliberately layered. These are defined and sequenced for the hackathon's remaining hours and must not block the core demo flow:
-
 1. **Load-priority granularity** — split flexible load into P2/P3/P4 tiers with monotonically decreasing penalties, so P4 is curtailed first, then P3, then P2, and P1 only under physical shortage. Load shifting is a future enhancement and is never calculated in the MVP optimizer.
 2. **Reactive baseline** — greedy no-lookahead dispatch of the same inputs (use available renewable, then battery, then diesel, shed P4→P1) to demonstrate baseline-versus-GridMitra improvement without hard-coded numbers.
 3. **Scenario lab** — solar/demand/diesel-price/battery multipliers with a re-optimize action and side-by-side comparison.
 4. **CSV export and optional run history** — CSV export of a result is **required**. PDF export and saved-run history in PostgreSQL/Supabase are optional if time permits.
 5. **Live weather fetch** — optional, cached, always with prepared-data fallback so the demo never depends on the internet.
+
+## Phase B direction (post-demo, decisions 011–014)
+
+The demo (`jury-demo-v2`) is frozen. Phase B turns GridMitra into a multi-user product:
+
+- **Multi-user ownership** — users own their sites and scenarios (Decision 011).
+- **Session-cookie authentication** — FastAPI/PostgreSQL accounts, Argon2, httpOnly session cookie; a prepared demo account keeps the jury demo offline and one-click (Decision 012).
+- **Immutable run snapshots** — results are never rewritten by scenario edits (Decision 013).
+- **Editable inputs, immutable outputs** — full scenario editor for inputs; optimizer results stay read-only (Decision 014).
+- **Scenario CRUD + versions** — draft → validate → save version → run.
+- **New UX** — 4-block hour explanations, weather preview/apply flow, `/app/*` routes, responsive bottom nav, landing + about pages.
+
+The frozen demo remains the offline judging path throughout.
 
 ## Non-goals for the MVP
 
@@ -51,7 +62,7 @@ The MVP is deliberately layered. These are defined and sequenced for the hackath
 - Real-time IoT telemetry or autonomous operation.
 - Multi-day or probabilistic forecasting.
 - Machine-learning dispatch models; the MILP is the dispatch engine.
-- Production-grade authentication and multi-tenant isolation.
+- Production-grade authentication (SSO, 2FA, large-scale tenant isolation). Basic multi-user auth and ownership are Phase B scope (Decision 011–012).
 - Coordination across multiple microgrids.
 - Complex diesel modeling (startup cost, minimum run time, non-linear fuel curves).
 - Pretending simulated savings are field-validated results.

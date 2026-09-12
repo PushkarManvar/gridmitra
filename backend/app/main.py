@@ -1,15 +1,19 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+import pulp
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.auth import router as auth_router
 from app.api.routes import router
 from app.api.weather import router as weather_router
 from app.core.config import get_settings
+from app.core.database import database_is_ready
 from app.core.migrations import run_migrations
+from app.repositories.auth import seed_demo_user
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +26,7 @@ async def lifespan(_app: FastAPI):
         applied = await run_migrations()
         if applied:
             logger.info("applied migrations: %s", ", ".join(applied))
+        await seed_demo_user()
     except Exception:
         logger.exception("database migrations failed; continuing without persistence")
     yield
@@ -31,10 +36,24 @@ app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
+public_router = APIRouter(prefix="/api/v1")
+
+
+@public_router.get("/health")
+async def health() -> dict[str, str]:
+    return {
+        "api": "ok",
+        "solver": "ok" if pulp.PULP_CBC_CMD(msg=False).available() else "unavailable",
+        "database": "ok" if await database_is_ready() else "unavailable",
+    }
+
+
+app.include_router(public_router)
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(router)
 app.include_router(weather_router, prefix="/api/v1")
 

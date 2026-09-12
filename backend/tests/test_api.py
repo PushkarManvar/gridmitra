@@ -1,17 +1,14 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
 
 
-def _demo_scenario() -> dict:
+
+
+def _demo_scenario(client) -> dict:
     scenario_response = client.get("/api/v1/scenarios/demo")
     assert scenario_response.status_code == 200
     return scenario_response.json()
 
 
-async def _successful_save(_request, _response) -> None:
+async def _successful_save(_request, _response, owner_id=None) -> None:
     return None
 
 
@@ -25,9 +22,9 @@ def _assert_validation_error(response, path=None) -> None:
         assert any(field["path"] == path for field in body["error"]["fields"])
 
 
-def test_demo_round_trip(monkeypatch) -> None:
+def test_demo_round_trip(monkeypatch, client) -> None:
     monkeypatch.setattr("app.services.persistence.save_run", _successful_save)
-    scenario = _demo_scenario()
+    scenario = _demo_scenario(client)
 
     optimization_response = client.post("/api/v1/optimize", json=scenario)
     assert optimization_response.status_code == 200
@@ -49,44 +46,44 @@ def test_demo_round_trip(monkeypatch) -> None:
     }
 
 
-def test_health_distinguishes_api_solver_database() -> None:
+def test_health_distinguishes_api_solver_database(client) -> None:
     payload = client.get("/api/v1/health").json()
     assert set(payload) == {"api", "solver", "database"}
 
 
-def test_rejects_incomplete_day() -> None:
-    scenario = _demo_scenario()
+def test_rejects_incomplete_day(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["hours"] = scenario["hours"][:-1]
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_extra_hours() -> None:
-    scenario = _demo_scenario()
+def test_rejects_extra_hours(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["hours"].append(dict(scenario["hours"][0], hour_index=24))
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_duplicate_hour_index() -> None:
-    scenario = _demo_scenario()
+def test_rejects_duplicate_hour_index(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["hours"][1]["hour_index"] = scenario["hours"][0]["hour_index"]
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_negative_demand() -> None:
-    scenario = _demo_scenario()
+def test_rejects_negative_demand(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["hours"][0]["p1_demand_kwh"] = -1
     response = client.post("/api/v1/optimize", json=scenario)
     _assert_validation_error(response, path="hours.0.p1_demand_kwh")
 
 
-def test_rejects_negative_renewable_availability() -> None:
-    scenario = _demo_scenario()
+def test_rejects_negative_renewable_availability(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["hours"][0]["solar_available_kwh"] = -1
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_invalid_efficiency() -> None:
-    scenario = _demo_scenario()
+def test_rejects_invalid_efficiency(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["battery"]["charge_efficiency"] = 1.5
     _assert_validation_error(
         client.post("/api/v1/optimize", json=scenario),
@@ -94,8 +91,8 @@ def test_rejects_invalid_efficiency() -> None:
     )
 
 
-def test_rejects_invalid_scenario_type() -> None:
-    scenario = _demo_scenario()
+def test_rejects_invalid_scenario_type(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["scenario_type"] = "not_a_scenario"
     _assert_validation_error(
         client.post("/api/v1/optimize", json=scenario),
@@ -103,14 +100,14 @@ def test_rejects_invalid_scenario_type() -> None:
     )
 
 
-def test_rejects_invalid_interval_hours() -> None:
-    scenario = _demo_scenario()
+def test_rejects_invalid_interval_hours(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["site"]["interval_hours"] = 2
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_battery_initial_outside_bounds() -> None:
-    scenario = _demo_scenario()
+def test_rejects_battery_initial_outside_bounds(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["battery"]["initial_energy_kwh"] = -5
     _assert_validation_error(
         client.post("/api/v1/optimize", json=scenario),
@@ -118,20 +115,20 @@ def test_rejects_battery_initial_outside_bounds() -> None:
     )
 
 
-def test_rejects_battery_minimum_above_maximum() -> None:
-    scenario = _demo_scenario()
+def test_rejects_battery_minimum_above_maximum(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["battery"]["minimum_energy_kwh"] = 200
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_reserve_above_maximum_energy() -> None:
-    scenario = _demo_scenario()
+def test_rejects_reserve_above_maximum_energy(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["battery"]["terminal_reserve_target_kwh"] = 500
     _assert_validation_error(client.post("/api/v1/optimize", json=scenario))
 
 
-def test_rejects_negative_diesel_capacity() -> None:
-    scenario = _demo_scenario()
+def test_rejects_negative_diesel_capacity(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["diesel"]["maximum_kw"] = -1
     _assert_validation_error(
         client.post("/api/v1/optimize", json=scenario),
@@ -139,8 +136,8 @@ def test_rejects_negative_diesel_capacity() -> None:
     )
 
 
-def test_rejects_negative_fuel_price() -> None:
-    scenario = _demo_scenario()
+def test_rejects_negative_fuel_price(client) -> None:
+    scenario = _demo_scenario(client)
     scenario["assets"]["diesel"]["fuel_price_per_l"] = -1
     _assert_validation_error(
         client.post("/api/v1/optimize", json=scenario),
@@ -148,12 +145,12 @@ def test_rejects_negative_fuel_price() -> None:
     )
 
 
-def test_database_failure_returns_calculated_result_with_warning(monkeypatch) -> None:
+def test_database_failure_returns_calculated_result_with_warning(monkeypatch, client) -> None:
     async def failing_save(_request, _response) -> None:
         raise RuntimeError("database unavailable")
 
     monkeypatch.setattr("app.services.persistence.save_run", failing_save)
-    scenario = _demo_scenario()
+    scenario = _demo_scenario(client)
     response = client.post("/api/v1/optimize", json=scenario)
     assert response.status_code == 200
     payload = response.json()
@@ -169,9 +166,9 @@ def _dispatch_rows(text: str) -> list[str]:
     return [line for line in text.splitlines() if line.startswith("dispatch,")]
 
 
-def test_csv_export_contains_all_hours_and_summary(monkeypatch) -> None:
+def test_csv_export_contains_all_hours_and_summary(monkeypatch, client) -> None:
     monkeypatch.setattr("app.services.persistence.save_run", _successful_save)
-    result = client.post("/api/v1/optimize", json=_demo_scenario()).json()
+    result = client.post("/api/v1/optimize", json=_demo_scenario(client)).json()
 
     csv_response = client.post("/api/v1/optimize/export", json=result)
     assert csv_response.status_code == 200
@@ -190,12 +187,12 @@ def test_csv_export_contains_all_hours_and_summary(monkeypatch) -> None:
     assert "p1_reliability_percent" in text
 
 
-def test_csv_export_works_after_persistence_failure(monkeypatch) -> None:
+def test_csv_export_works_after_persistence_failure(monkeypatch, client) -> None:
     async def failing_save(_request, _response) -> None:
         raise RuntimeError("database unavailable")
 
     monkeypatch.setattr("app.services.persistence.save_run", failing_save)
-    result = client.post("/api/v1/optimize", json=_demo_scenario()).json()
+    result = client.post("/api/v1/optimize", json=_demo_scenario(client)).json()
     assert result["persistence"]["saved"] is False
 
     csv_response = client.post("/api/v1/optimize/export", json=result)
@@ -204,9 +201,9 @@ def test_csv_export_works_after_persistence_failure(monkeypatch) -> None:
     assert "DATABASE_SAVE_FAILED" in csv_response.text
 
 
-def test_csv_export_accepts_emergency_plan(monkeypatch) -> None:
+def test_csv_export_accepts_emergency_plan(monkeypatch, client) -> None:
     monkeypatch.setattr("app.services.persistence.save_run", _successful_save)
-    scenario = _demo_scenario()
+    scenario = _demo_scenario(client)
     for hour in scenario["hours"]:
         hour["solar_available_kwh"] = 0
         hour["wind_available_kwh"] = 0
@@ -218,9 +215,9 @@ def test_csv_export_accepts_emergency_plan(monkeypatch) -> None:
     assert "P1_UNSERVED" in csv_response.text
 
 
-def test_p3_p4_shedding_returns_emergency_with_warnings(monkeypatch) -> None:
+def test_p3_p4_shedding_returns_emergency_with_warnings(monkeypatch, client) -> None:
     monkeypatch.setattr("app.services.persistence.save_run", _successful_save)
-    scenario = _demo_scenario()
+    scenario = _demo_scenario(client)
     for hour in scenario["hours"]:
         hour["solar_available_kwh"] = 0
         hour["wind_available_kwh"] = 0

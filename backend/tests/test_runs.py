@@ -1,18 +1,15 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
 
 
-def _demo_scenario() -> dict:
+
+
+def _demo_scenario(client) -> dict:
     response = client.get("/api/v1/scenarios/demo")
     assert response.status_code == 200
     return response.json()
 
 
-def test_optimize_persists_run_and_list_returns_it() -> None:
-    scenario = _demo_scenario()
+def test_optimize_persists_run_and_list_returns_it(client) -> None:
+    scenario = _demo_scenario(client)
     optimize = client.post("/api/v1/optimize", json=scenario)
     assert optimize.status_code == 200
     payload = optimize.json()
@@ -22,8 +19,8 @@ def test_optimize_persists_run_and_list_returns_it() -> None:
     assert any(run["run_id"] == payload["run_id"] for run in listed)
 
 
-def test_get_run_round_trip() -> None:
-    scenario = _demo_scenario()
+def test_get_run_round_trip(client) -> None:
+    scenario = _demo_scenario(client)
     payload = client.post("/api/v1/optimize", json=scenario).json()
 
     detail = client.get(f"/api/v1/runs/{payload['run_id']}")
@@ -42,7 +39,7 @@ def test_get_run_round_trip() -> None:
     assert len(body["input_snapshot"]["hours"]) == 24
 
 
-def test_unknown_run_returns_404() -> None:
+def test_unknown_run_returns_404(client) -> None:
     response = client.get("/api/v1/runs/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
     body = response.json()
