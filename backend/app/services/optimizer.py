@@ -14,6 +14,7 @@ from app.models import (
 )
 from app.services.baseline import compute_baseline_summary
 from app.services.constants import (
+    EPSILON,
     PRIORITIES,
     RESERVE_SHORTFALL_PENALTY_PER_KWH,
     UNSERVED_PENALTY_BY_PRIORITY,
@@ -147,8 +148,17 @@ def optimize_microgrid(request: OptimizationRequest) -> OptimizationResponse:
     summary = compute_summary(request, _hour_result_dicts(dispatch_hours), reserve_shortfall)
     baseline_summary = compute_baseline_summary(request)
 
-    p1_unserved = summary.p1_unserved_kwh
-    status = "emergency_plan" if (p1_unserved > 0 or reserve_shortfall > 0) else "optimal"
+    total_unserved = (
+        summary.p1_unserved_kwh
+        + summary.p2_unserved_kwh
+        + summary.p3_unserved_kwh
+        + summary.p4_unserved_kwh
+    )
+    status = (
+        "emergency_plan"
+        if (total_unserved > EPSILON or reserve_shortfall > EPSILON)
+        else "optimal"
+    )
 
     return OptimizationResponse(
         run_id=str(uuid.uuid4()),
@@ -305,21 +315,29 @@ def _build_explanations(
                     evidence={"curtailment_kwh": hour.renewable_curtailment_kwh},
                 )
             )
-        if hour.p4_unserved_kwh > 1e-6:
-            explanations.append(
-                Explanation(
-                    code="P4_REDUCED",
-                    severity="info",
-                    hour_index=hour.hour_index,
-                    message=(
-                        "Flexible P4 demand was reduced to protect P1, P2, and P3 "
-                        "services during a supply shortage."
-                    ),
-                    evidence={"p4_unserved_kwh": hour.p4_unserved_kwh},
-                )
-            )
+        if hour.p4_unserved_kwh > EPSILON or hour.p3_unserved_kwh > EPSILON or hour.p2_unserved_kwh > EPSILON:
+            for priority, attribute in (
+                ("p4", "p4_unserved_kwh"),
+                ("p3", "p3_unserved_kwh"),
+                ("p2", "p2_unserved_kwh"),
+            ):
+                unserved_kwh = getattr(hour, attribute)
+                if unserved_kwh > EPSILON:
+                    explanations.append(
+                        Explanation(
+                            code=f"{priority.upper()}_REDUCED",
+                            severity="warning",
+                            hour_index=hour.hour_index,
+                            message=(
+                                f"{unserved_kwh:.3f} kWh of {priority.upper()} demand was "
+                                "reduced to protect higher-priority services during a supply "
+                                "shortage."
+                            ),
+                            evidence={f"{priority}_unserved_kwh": unserved_kwh},
+                        )
+                    )
 
-    if summary.p1_unserved_kwh > 0:
+    if summary.p1_unserved_kwh > EPSILON:
         explanations.append(
             Explanation(
                 code="P1_UNSERVED",
@@ -331,7 +349,7 @@ def _build_explanations(
                 evidence={"p1_unserved_kwh": summary.p1_unserved_kwh},
             )
         )
-    if summary.reserve_shortfall_kwh > 0:
+    if summary.reserve_shortfall_kwh > EPSILON:
         explanations.append(
             Explanation(
                 code="RESERVE_SHORTFALL",
@@ -363,7 +381,7 @@ def _build_warnings(
     summary: OptimizationSummary,
 ) -> list[Warning]:
     warnings: list[Warning] = []
-    if summary.p1_unserved_kwh > 0:
+    if summary.p1_unserved_kwh > EPSILON:
         warnings.append(
             Warning(
                 code="P1_UNSERVED",
@@ -371,7 +389,24 @@ def _build_warnings(
                 message="Critical P1 demand could not be fully served.",
             )
         )
-    if summary.reserve_shortfall_kwh > 0:
+    for priority, attribute in (
+        ("P4", "p4_unserved_kwh"),
+        ("P3", "p3_unserved_kwh"),
+        ("P2", "p2_unserved_kwh"),
+    ):
+        unserved_kwh = getattr(summary, attribute)
+        if unserved_kwh > EPSILON:
+            warnings.append(
+                Warning(
+                    code=f"{priority}_REDUCED",
+                    severity="warning",
+                    message=(
+                        f"{unserved_kwh:.3f} kWh of {priority} demand was reduced to "
+                        "protect higher-priority services."
+                    ),
+                )
+            )
+    if summary.reserve_shortfall_kwh > EPSILON:
         warnings.append(
             Warning(
                 code="RESERVE_SHORTFALL",
@@ -380,7 +415,7 @@ def _build_warnings(
             )
         )
     total_curtailment = sum(hour.renewable_curtailment_kwh for hour in dispatch_hours)
-    if total_curtailment > 1e-6:
+    if total_curtailment > EPSILON:
         warnings.append(
             Warning(
                 code="RENEWABLE_CURTAILMENT",

@@ -248,9 +248,15 @@ The API exposes product statuses rather than raw CBC status strings.
 
 | Condition | API status |
 |---|---|
-| CBC returns an optimal solution with no P1 or reserve violation | `optimal` |
-| Valid solution contains P1 unserved energy or reserve shortfall | `emergency_plan` |
+| Valid solution with no unserved load and no reserve shortfall | `optimal` |
+| Valid solution contains any unserved load (P1-P4) or reserve shortfall | `emergency_plan` |
 | Solver does not return a valid solution | `failed` |
+
+Any unserved energy in any priority - P1, P2, P3 or P4 - makes the plan an
+`emergency_plan`. The least-harm solution sheds the lowest priority first
+(P4 -> P3 -> P2 -> P1), and the status must reflect that demand could not be
+fully met. Values are compared with the shared tolerance `EPSILON` (section 11);
+amounts below `EPSILON` count as zero.
 
 The backend must check solver status before reading decision-variable values. A failed run must not return partial dispatch values as a valid plan.
 
