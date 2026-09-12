@@ -64,6 +64,8 @@ export function Forecast() {
         panel_tilt_degrees: Number(tilt),
         panel_azimuth_degrees: Number(azimuth),
         solar_derating_factor: scenario.site.solar_derating_factor ?? 0.85,
+        date: scenario.site.start_time.slice(0, 10),
+        timezone: scenario.site.timezone || "Asia/Kolkata",
       });
       setWeather(forecast);
       setLastUpdated(new Date().toLocaleTimeString());

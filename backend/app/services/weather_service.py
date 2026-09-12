@@ -1,24 +1,46 @@
-"""Open-Meteo live weather integration.
+"""Open-Meteo live weather integration with local-calendar-day alignment.
 
-The optimizer never calls this service directly. FastAPI fetches weather,
-converts it into solar/wind availability, and hands the resulting 24-hour
-records to the existing validation and optimization flow. Live weather is
-optional; prepared data remains the default judge path.
+The optimizer never calls this service directly. FastAPI fetches weather for the
+exact local scenario date, normalizes every record to its real local
+``hour_index`` (00:00 -> 0 ... 23:00 -> 23), validates that all 24 hours are
+present, and hands the aligned records to the existing validation and
+optimization flow. Live weather is optional; prepared data remains the default
+judge path.
+
+P0 fix: hour_index is derived from the returned local timestamp, never from the
+enumerate position, so a rolling 16:00-window can never be relabelled as 00:00.
 """
+
+import datetime
+import logging
+from zoneinfo import ZoneInfo
 
 import httpx
 
 from app.schemas.weather import WeatherForecastResponse, WeatherHour
 
+logger = logging.getLogger(__name__)
+
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 DEFAULT_SOLAR_DERATING_FACTOR = 0.85
+DEFAULT_TIMEZONE = "Asia/Kolkata"
 
-_CACHE: dict[tuple[float, float], dict] = {}
+_CACHE: dict[tuple, dict] = {}
 
 
 class WeatherServiceError(Exception):
     pass
+
+
+class IncompleteWeatherError(WeatherServiceError):
+    """Live weather did not cover the requested local calendar day."""
+
+
+def _parse_local_timestamp(value: str, timezone: str) -> datetime.datetime:
+    """Open-Meteo returns local clock times (no offset). Make them tz-aware."""
+    naive = datetime.datetime.fromisoformat(value)
+    return naive.replace(tzinfo=ZoneInfo(timezone))
 
 
 async def fetch_weather_forecast(
@@ -26,11 +48,14 @@ async def fetch_weather_forecast(
     longitude: float,
     panel_tilt_degrees: float,
     panel_azimuth_degrees: float,
+    date: str,
+    timezone: str,
 ) -> dict:
-    """Request a 24-hour forecast from Open-Meteo and validate its shape.
+    """Request one local calendar day (00:00-23:00) from Open-Meteo.
 
-    Raises WeatherServiceError when the provider is unreachable or returns an
-    incomplete response.
+    Uses explicit start_date/end_date for the requested scenario date, never a
+    rolling forecast_hours window. Raises WeatherServiceError when the provider
+    is unreachable or the response shape is invalid.
     """
     params = {
         "latitude": latitude,
@@ -38,8 +63,9 @@ async def fetch_weather_forecast(
         "hourly": ",".join(
             ["global_tilted_irradiance", "wind_speed_10m", "cloud_cover"]
         ),
-        "forecast_hours": 24,
-        "timezone": "auto",
+        "start_date": date,
+        "end_date": date,
+        "timezone": timezone,
         "wind_speed_unit": "ms",
         "tilt": panel_tilt_degrees,
         "azimuth": panel_azimuth_degrees,
@@ -57,15 +83,14 @@ async def fetch_weather_forecast(
     required_fields = ["time", "global_tilted_irradiance", "wind_speed_10m", "cloud_cover"]
     for field in required_fields:
         values = hourly.get(field)
-        if not isinstance(values, list) or len(values) != 24:
+        if not isinstance(values, list) or not values:
             raise WeatherServiceError(f"Weather response has invalid field: {field}")
-        if any(value is None for value in values):
-            raise WeatherServiceError(f"Weather response contains missing values: {field}")
 
     return {
-        "timezone": data.get("timezone"),
+        "timezone": data.get("timezone") or timezone,
         "latitude": data.get("latitude"),
         "longitude": data.get("longitude"),
+        "date": date,
         "hourly": hourly,
     }
 
@@ -114,33 +139,128 @@ def calculate_wind_available_kwh(
 
 def transform_weather_to_energy(
     weather: dict,
+    date: str,
+    timezone: str,
     solar_capacity_kw: float,
     wind_capacity_kw: float,
     solar_derating_factor: float,
 ) -> list[WeatherHour]:
-    """Build the 24-hour solar/wind availability records used by the optimizer."""
+    """Normalize a weather response into aligned local hours 0-23.
+
+    hour_index is derived from each record's local timestamp. Records outside the
+    requested local date are dropped, the remainder is sorted, duplicates are
+    rejected, and all hours 0-23 must be present. Raises IncompleteWeatherError
+    otherwise — the caller falls back to prepared data.
+    """
     hourly = weather["hourly"]
+    records: list[tuple[datetime.datetime, float, float, float]] = []
+    for index in range(len(hourly["time"])):
+        try:
+            local_time = _parse_local_timestamp(hourly["time"][index], timezone)
+        except ValueError as exc:
+            raise IncompleteWeatherError(
+                "LIVE_WEATHER_INCOMPLETE: unparseable timestamp"
+            ) from exc
+        if local_time.date().isoformat() != date:
+            continue
+        records.append(
+            (
+                local_time,
+                float(hourly["global_tilted_irradiance"][index]),
+                float(hourly["wind_speed_10m"][index]),
+                float(hourly["cloud_cover"][index]),
+            )
+        )
+
+    if not records:
+        raise IncompleteWeatherError(
+            "LIVE_WEATHER_INCOMPLETE: no records for the requested local date"
+        )
+
+    records.sort(key=lambda item: item[0])
+
+    seen_hours: set[int] = set()
     hours: list[WeatherHour] = []
-    for hour_index in range(24):
-        solar_kwh = calculate_solar_available_kwh(
-            irradiance_w_per_m2=hourly["global_tilted_irradiance"][hour_index],
-            solar_capacity_kw=solar_capacity_kw,
-            derating_factor=solar_derating_factor,
-        )
-        wind_kwh = calculate_wind_available_kwh(
-            wind_speed_mps=hourly["wind_speed_10m"][hour_index],
-            wind_capacity_kw=wind_capacity_kw,
-        )
+    for local_time, irradiance, wind_speed, cloud_cover in records:
+        hour_index = local_time.hour
+        if hour_index in seen_hours:
+            raise IncompleteWeatherError(
+                f"LIVE_WEATHER_INCOMPLETE: duplicate local hour {hour_index}"
+            )
+        seen_hours.add(hour_index)
         hours.append(
             WeatherHour(
                 hour_index=hour_index,
-                timestamp=hourly["time"][hour_index],
-                solar_available_kwh=round(solar_kwh, 3),
-                wind_available_kwh=round(wind_kwh, 3),
-                cloud_cover_percent=round(float(hourly["cloud_cover"][hour_index]), 1),
+                timestamp=local_time.isoformat(),
+                solar_available_kwh=round(
+                    calculate_solar_available_kwh(
+                        irradiance,
+                        solar_capacity_kw,
+                        solar_derating_factor,
+                    ),
+                    3,
+                ),
+                wind_available_kwh=round(
+                    calculate_wind_available_kwh(wind_speed, wind_capacity_kw),
+                    3,
+                ),
+                cloud_cover_percent=round(cloud_cover, 1),
             )
         )
+
+    if set(seen_hours) != set(range(24)):
+        missing = sorted(set(range(24)) - seen_hours)
+        raise IncompleteWeatherError(
+            f"LIVE_WEATHER_INCOMPLETE: missing local hours {missing}"
+        )
+
     return hours
+
+
+def _prepared_fallback(timezone: str, code: str, message: str) -> WeatherForecastResponse:
+    return WeatherForecastResponse(
+        source="prepared_fallback",
+        provider="open_meteo",
+        timezone=timezone,
+        hours=[],
+        warnings=[
+            {
+                "code": code,
+                "severity": "warning",
+                "message": message,
+            }
+        ],
+    )
+
+
+def _log_weather_outcome(
+    date: str,
+    timezone: str,
+    source: str,
+    hours: list[WeatherHour],
+    weather: dict | None,
+) -> None:
+    if not hours:
+        logger.warning(
+            "weather %s for date=%s tz=%s: no usable records",
+            source,
+            date,
+            timezone,
+        )
+        return
+    first = hours[0]
+    last = hours[-1]
+    logger.info(
+        "weather %s date=%s tz=%s first=%s(%s) last=%s(%s) records=%d",
+        source,
+        date,
+        timezone,
+        first.hour_index,
+        first.timestamp,
+        last.hour_index,
+        last.timestamp,
+        len(hours),
+    )
 
 
 async def get_weather_forecast(
@@ -151,34 +271,49 @@ async def get_weather_forecast(
     panel_tilt_degrees: float,
     panel_azimuth_degrees: float,
     solar_derating_factor: float,
+    date: str,
+    timezone: str,
 ) -> WeatherForecastResponse:
-    """Live forecast with a graceful last-successful-response cache fallback.
+    """Live forecast for the requested local day with graceful fallbacks.
 
-    Order: live Open-Meteo -> cached last success -> raise (endpoint returns
-    WEATHER_UNAVAILABLE; the frontend falls back to prepared data).
+    Order: live Open-Meteo -> cached last success for the same day -> raise
+    (endpoint returns prepared fallback with LIVE_WEATHER_INCOMPLETE, or 503
+    WEATHER_UNAVAILABLE when the provider is unreachable).
     """
-    cache_key = (round(latitude, 4), round(longitude, 4))
+    cache_key = (
+        round(latitude, 4),
+        round(longitude, 4),
+        date,
+        timezone,
+    )
+
     try:
         weather = await fetch_weather_forecast(
             latitude=latitude,
             longitude=longitude,
             panel_tilt_degrees=panel_tilt_degrees,
             panel_azimuth_degrees=panel_azimuth_degrees,
+            date=date,
+            timezone=timezone,
         )
     except WeatherServiceError:
         cached = _CACHE.get(cache_key)
         if cached is None:
             raise
+        cached_hours = transform_weather_to_energy(
+            weather=cached,
+            date=date,
+            timezone=timezone,
+            solar_capacity_kw=solar_capacity_kw,
+            wind_capacity_kw=wind_capacity_kw,
+            solar_derating_factor=solar_derating_factor,
+        )
+        _log_weather_outcome(date, timezone, "cached", cached_hours, cached)
         return WeatherForecastResponse(
             source="cached",
             provider="open_meteo",
-            timezone=cached["timezone"],
-            hours=transform_weather_to_energy(
-                weather=cached,
-                solar_capacity_kw=solar_capacity_kw,
-                wind_capacity_kw=wind_capacity_kw,
-                solar_derating_factor=solar_derating_factor,
-            ),
+            timezone=timezone,
+            hours=cached_hours,
             warnings=[
                 {
                     "code": "FALLBACK_DATA_USED",
@@ -191,15 +326,51 @@ async def get_weather_forecast(
             ],
         )
 
-    _CACHE[cache_key] = weather
-    return WeatherForecastResponse(
-        source="live",
-        provider="open_meteo",
-        timezone=weather["timezone"],
-        hours=transform_weather_to_energy(
+    try:
+        hours = transform_weather_to_energy(
             weather=weather,
+            date=date,
+            timezone=timezone,
             solar_capacity_kw=solar_capacity_kw,
             wind_capacity_kw=wind_capacity_kw,
             solar_derating_factor=solar_derating_factor,
-        ),
+        )
+    except IncompleteWeatherError as exc:
+        cached = _CACHE.get(cache_key)
+        if cached is not None:
+            try:
+                cached_hours = transform_weather_to_energy(
+                    weather=cached,
+                    date=date,
+                    timezone=timezone,
+                    solar_capacity_kw=solar_capacity_kw,
+                    wind_capacity_kw=wind_capacity_kw,
+                    solar_derating_factor=solar_derating_factor,
+                )
+                _log_weather_outcome(date, timezone, "cached", cached_hours, cached)
+                return WeatherForecastResponse(
+                    source="cached",
+                    provider="open_meteo",
+                    timezone=timezone,
+                    hours=cached_hours,
+                    warnings=[
+                        {
+                            "code": "LIVE_WEATHER_INCOMPLETE",
+                            "severity": "warning",
+                            "message": str(exc),
+                        }
+                    ],
+                )
+            except IncompleteWeatherError:
+                pass
+        logger.warning("live weather incomplete for %s: %s", date, exc)
+        raise
+
+    _CACHE[cache_key] = weather
+    _log_weather_outcome(date, timezone, "live", hours, weather)
+    return WeatherForecastResponse(
+        source="live",
+        provider="open_meteo",
+        timezone=timezone,
+        hours=hours,
     )

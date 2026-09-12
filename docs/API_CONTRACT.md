@@ -141,7 +141,7 @@ Unknown `run_id` returns HTTP `404` with:
 
 ## `GET /api/v1/weather/forecast`
 
-Optional live-weather source. FastAPI calls Open-Meteo (no API key for non-commercial use), converts irradiance/wind into 24 hourly solar/wind availability records, and never lets the optimizer call the weather provider directly.
+Optional live-weather source. FastAPI calls Open-Meteo for the **exact local scenario calendar day** (`start_date`/`end_date`, never a rolling window), converts irradiance/wind into 24 hourly solar/wind availability records aligned to local hours `00:00 → hour_index 0 … 23:00 → 23`, and never lets the optimizer call the weather provider directly.
 
 Query parameters:
 
@@ -149,6 +149,8 @@ Query parameters:
 - `solar_capacity_kw`, `wind_capacity_kw` — required.
 - `panel_tilt_degrees` (0..90), `panel_azimuth_degrees` (−180..180) — required (0° = south in Open-Meteo).
 - `solar_derating_factor` (0..1, default 0.85) — documented demo assumption.
+- `date` (YYYY-MM-DD) — required; the scenario's local date.
+- `timezone` (IANA, default `Asia/Kolkata`) — the scenario/site timezone.
 
 Response:
 
@@ -156,11 +158,11 @@ Response:
 {
   "source": "live | cached | prepared_fallback",
   "provider": "open_meteo",
-  "timezone": "string | null",
+  "timezone": "string",
   "hours": [
     {
-      "hour_index": 10,
-      "timestamp": "2026-09-12T10:00",
+      "hour_index": 16,
+      "timestamp": "2026-09-12T16:00:00+05:30",
       "solar_available_kwh": 40.8,
       "wind_available_kwh": 2.4,
       "cloud_cover_percent": 27
@@ -170,8 +172,9 @@ Response:
 }
 ```
 
-- `source` `live` = fetched now; `cached` = last successful response for the location; `prepared_fallback` = provider down, no cache.
-- Provider failure with no cache returns HTTP `503` `{"error": {"code": "WEATHER_UNAVAILABLE", "message": "Live weather is unavailable. Use prepared data."}}`. A failed weather fetch never fails optimization.
+- `hour_index` is derived from each record's local timestamp, never from the response position.
+- Live data must contain all 24 local hours of the requested date (sorted, unique). If it is incomplete, misaligned or duplicates a local hour, the API returns `source: prepared_fallback` with empty `hours` and a `LIVE_WEATHER_INCOMPLETE` warning — incomplete live data is never sent to the optimizer.
+- Provider unreachable with no cache returns HTTP `503` `WEATHER_UNAVAILABLE`. A failed weather fetch never fails optimization.
 - Demand values are not returned — weather does not provide community P1–P4 demand.
 
 ## Scenario versions (Phase B — Decision 014)

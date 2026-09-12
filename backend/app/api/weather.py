@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.deps import get_current_user
 from app.schemas.weather import WeatherForecastResponse
 from app.services.weather_service import (
+    DEFAULT_TIMEZONE,
+    IncompleteWeatherError,
     WeatherServiceError,
     get_weather_forecast,
 )
@@ -19,6 +21,8 @@ async def get_live_forecast(
     panel_tilt_degrees: float = Query(ge=0, le=90),
     panel_azimuth_degrees: float = Query(ge=-180, le=180),
     solar_derating_factor: float = Query(default=0.85, gt=0, le=1),
+    date: str = Query(..., pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    timezone: str = Query(default=DEFAULT_TIMEZONE),
 ) -> WeatherForecastResponse:
     try:
         return await get_weather_forecast(
@@ -29,6 +33,26 @@ async def get_live_forecast(
             panel_tilt_degrees=panel_tilt_degrees,
             panel_azimuth_degrees=panel_azimuth_degrees,
             solar_derating_factor=solar_derating_factor,
+            date=date,
+            timezone=timezone,
+        )
+    except IncompleteWeatherError:
+        # Never send incomplete or misaligned live data into the optimizer.
+        return WeatherForecastResponse(
+            source="prepared_fallback",
+            provider="open_meteo",
+            timezone=timezone,
+            hours=[],
+            warnings=[
+                {
+                    "code": "LIVE_WEATHER_INCOMPLETE",
+                    "severity": "warning",
+                    "message": (
+                        f"Live weather did not contain all 24 local hours for "
+                        f"{date} in {timezone}. Prepared weather data was used."
+                    ),
+                }
+            ],
         )
     except WeatherServiceError:
         raise HTTPException(
