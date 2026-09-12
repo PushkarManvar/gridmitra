@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { AuthProvider } from "./context/AuthProvider";
 import { AppProvider } from "./context/AppProvider";
 import { AppShell } from "./components/layout/AppShell";
 import { About } from "./pages/About";
@@ -41,5 +42,9 @@ function AppRoutes() {
 }
 
 export default function App() {
-  return <AppRoutes />;
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }

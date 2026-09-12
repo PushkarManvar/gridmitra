@@ -6,7 +6,6 @@ from sqlalchemy import text
 
 from app.core.database import engine
 from app.models import OptimizationRequest, OptimizationResponse
-from app.repositories.owner import demo_owner_id
 from app.services.constants import (
     MODEL_VERSION,
     SCENARIO_SOURCE_DEFAULT,
@@ -37,14 +36,15 @@ def _as_datetime(value: str, site_start: str, hour_index: int | None = None) -> 
     return start + timedelta(hours=hour_index or 0)
 
 
-async def save_run(request: OptimizationRequest, response: OptimizationResponse) -> None:
+async def save_run(
+    request: OptimizationRequest, response: OptimizationResponse, owner_id: str
+) -> None:
     """Persist a calculated run in one transaction.
 
     Saves the site, site assets, scenario, 24 scenario hours, the run summary,
     the 24 dispatch hours and the decision explanations atomically. Raises on
     failure; the caller decides how to degrade gracefully.
     """
-    owner_id = await demo_owner_id()
     site_uuid = _uuid(f"site:{request.site.site_id}")
     scenario_uuid = _uuid(f"scenario:{request.scenario_id}")
     run_uuid = response.run_id
@@ -272,8 +272,8 @@ async def save_run(request: OptimizationRequest, response: OptimizationResponse)
             )
 
 
-async def list_runs(limit: int = 20) -> list[dict]:
-    """List persisted runs newest first. Each item carries the parsed summary.
+async def list_runs(owner_id: str, limit: int = 20) -> list[dict]:
+    """List the owner's persisted runs newest first.
 
     Scenario names come from the run's immutable input snapshot, never from the
     live scenarios table, so a renamed scenario never mislabels a historical run.
@@ -285,10 +285,11 @@ async def list_runs(limit: int = 20) -> list[dict]:
                 "       r.input_snapshot, s.name as scenario_name"
                 "  from gridmitra.optimization_runs r"
                 "  left join gridmitra.scenarios s on s.id = r.scenario_id"
+                "  where s.owner_id = :owner_id"
                 "  order by r.created_at desc"
                 "  limit :limit"
             ),
-            {"limit": limit},
+            {"owner_id": owner_id, "limit": limit},
         )
         runs = []
         for row in rows:

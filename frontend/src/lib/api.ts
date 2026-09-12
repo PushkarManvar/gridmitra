@@ -10,8 +10,21 @@ import type {
 // session cookie flows with SameSite=Lax and no CORS handling is required.
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
+let authToken: string | null = null;
+
+/** Set the Firebase ID token to attach to API requests (null = anonymous). */
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, init);
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (!response.ok) {
     const body = await response.text();
     throw new Error(body || `Request failed with status ${response.status}`);

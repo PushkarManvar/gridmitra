@@ -190,9 +190,13 @@ Owner-scoped saved scenario drafts. Optimizer results are never stored here; run
 
 `POST /scenarios` returns `{"name", "scenario_type", "version"}` with `201`. Unknown scenario returns `404 SCENARIO_NOT_FOUND`.
 
-## Auth (transition)
+## Auth (Firebase — Decision 015)
 
-Manual FastAPI auth (register/login/logout/me, session cookie) was removed. Authentication is moving to **Firebase Auth** (Decision 015). Until a Firebase project is configured, the API is open and the demo runs fully offline. When Firebase is wired, a verified Firebase ID token will gate the routes and ownership will map to the Firebase user id.
+Authentication uses **Firebase Auth**. The frontend attaches the Firebase ID token as `Authorization: Bearer <id_token>`. The backend verifies it with the Firebase Admin SDK when a service account is configured; otherwise every request is treated as the demo owner, keeping the offline demo fully working.
+
+- Verified requests are owned by the Firebase user (owner-scoped runs/scenarios).
+- Requests without a valid token fall back to the demo operator owner.
+- Service account env: `FIREBASE_SERVICE_ACCOUNT_JSON` (JSON string) or `FIREBASE_SERVICE_ACCOUNT_PATH`.
 
 ## Error responses
 
