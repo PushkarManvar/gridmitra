@@ -315,7 +315,11 @@ def _build_explanations(
                     evidence={"curtailment_kwh": hour.renewable_curtailment_kwh},
                 )
             )
-        if hour.p4_unserved_kwh > EPSILON or hour.p3_unserved_kwh > EPSILON or hour.p2_unserved_kwh > EPSILON:
+        if (
+            hour.p4_unserved_kwh > EPSILON
+            or hour.p3_unserved_kwh > EPSILON
+            or hour.p2_unserved_kwh > EPSILON
+        ):
             for priority, attribute in (
                 ("p4", "p4_unserved_kwh"),
                 ("p3", "p3_unserved_kwh"),

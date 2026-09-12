@@ -401,7 +401,8 @@ def test_explanation_kwh_matches_dispatch_totals() -> None:
 def test_no_reduction_warning_when_nothing_shed() -> None:
     result = optimize_microgrid(load_demo())
     assert result.status == "optimal"
-    assert not any(code in _codes(result.warnings) for code in ("P4_REDUCED", "P3_REDUCED", "P2_REDUCED"))
+    reduced_codes = ("P4_REDUCED", "P3_REDUCED", "P2_REDUCED")
+    assert not any(code in _codes(result.warnings) for code in reduced_codes)
 
 
 def test_p1_unserved_still_critical_with_explanation() -> None:
