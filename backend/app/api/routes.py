@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+from app.api.deps import current_owner_id
 from app.models import OptimizationRequest, OptimizationResponse
 from app.repositories.persistence import get_run, list_runs
 from app.services.csv_export import render_export_csv
@@ -21,12 +23,15 @@ async def demo_scenario() -> OptimizationRequest:
 
 
 @router.post("/optimize", response_model=OptimizationResponse)
-async def optimize(request: OptimizationRequest) -> OptimizationResponse:
+async def optimize(
+    request: OptimizationRequest,
+    owner_id: Annotated[str, Depends(current_owner_id)],
+) -> OptimizationResponse:
     try:
         response = optimize_microgrid(request)
     except OptimizationError as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    persistence, warnings = await persist_run(request, response)
+    persistence, warnings = await persist_run(request, response, owner_id=owner_id)
     return response.model_copy(update={"persistence": persistence, "warnings": warnings})
 
 
@@ -40,9 +45,12 @@ async def export_csv(response: OptimizationResponse) -> Response:
 
 
 @router.get("/runs")
-async def runs(limit: int = 20) -> dict:
+async def runs(
+    owner_id: Annotated[str, Depends(current_owner_id)],
+    limit: int = 20,
+) -> dict:
     try:
-        return {"runs": await list_runs(limit)}
+        return {"runs": await list_runs(owner_id, limit)}
     except Exception as error:
         raise HTTPException(
             status_code=500, detail=f"Could not read run history: {error}"

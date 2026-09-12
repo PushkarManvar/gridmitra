@@ -1,9 +1,14 @@
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
+import { SignInModal } from "../SignInModal";
 
 export function TopBar() {
   const location = useLocation();
   const { scenario } = useApp();
+  const { user, signOut } = useAuth();
+  const [signInOpen, setSignInOpen] = useState(false);
   const currentPath = location.pathname;
 
   let currentSection = "Overview";
@@ -30,6 +35,34 @@ export function TopBar() {
           <span>{currentDetail}</span>
         </button>
       </div>
+
+      <div>
+        {user ? (
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs text-secondary max-w-[180px] truncate">
+              <span className="material-symbols-outlined text-[15px] text-primary">account_circle</span>
+              {user.email ?? "Signed in"}
+            </span>
+            <button
+              onClick={() => void signOut()}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+            >
+              <span className="material-symbols-outlined text-[15px]">logout</span>
+              <span>Sign out</span>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setSignInOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px]">login</span>
+            <span>Sign in</span>
+          </button>
+        )}
+      </div>
+
+      {signInOpen && <SignInModal onClose={() => setSignInOpen(false)} />}
     </header>
   );
 }
