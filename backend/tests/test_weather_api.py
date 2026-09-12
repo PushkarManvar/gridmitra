@@ -1,11 +1,7 @@
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app
 from app.services.weather_service import _CACHE, WeatherServiceError
 from tests.test_weather import SAMPLE_WEATHER
-
-client = TestClient(app)
 
 WEATHER_PARAMS = {
     "latitude": 23.0225,
@@ -18,7 +14,7 @@ WEATHER_PARAMS = {
 }
 
 
-def test_weather_forecast_live(monkeypatch) -> None:
+def test_weather_forecast_live(monkeypatch, client) -> None:
     async def fake_fetch(latitude, longitude, panel_tilt_degrees, panel_azimuth_degrees):
         return SAMPLE_WEATHER
 
@@ -34,7 +30,7 @@ def test_weather_forecast_live(monkeypatch) -> None:
     assert payload["warnings"] == []
 
 
-def test_weather_forecast_unavailable_returns_503(monkeypatch) -> None:
+def test_weather_forecast_unavailable_returns_503(monkeypatch, client) -> None:
     async def failing_fetch(latitude, longitude, panel_tilt_degrees, panel_azimuth_degrees):
         raise WeatherServiceError("down")
 
@@ -46,7 +42,7 @@ def test_weather_forecast_unavailable_returns_503(monkeypatch) -> None:
     assert response.json()["detail"]["code"] == "WEATHER_UNAVAILABLE"
 
 
-def test_weather_forecast_rejects_invalid_latitude() -> None:
+def test_weather_forecast_rejects_invalid_latitude(client) -> None:
     params = {**WEATHER_PARAMS, "latitude": 999}
     response = client.get("/api/v1/weather/forecast", params=params)
     assert response.status_code == 422

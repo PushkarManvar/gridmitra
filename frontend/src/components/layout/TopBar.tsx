@@ -1,10 +1,12 @@
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { useApp } from "../../context/AppContext";
 import { StatusBadge } from "../ui/StatusBadge";
 
 export function TopBar() {
   const location = useLocation();
   const { scenario, result, loading } = useApp();
+  const { logout } = useAuth();
   const currentPath = location.pathname;
 
   let currentSection = "Overview";
@@ -32,6 +34,14 @@ export function TopBar() {
           <span>{currentDetail}</span>
         </button>
         <StatusBadge status={runStatus} />
+        <button
+          onClick={() => void logout()}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+          title="Sign out"
+        >
+          <span className="material-symbols-outlined text-[15px]">logout</span>
+          <span>Sign out</span>
+        </button>
       </div>
     </header>
   );

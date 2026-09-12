@@ -142,6 +142,56 @@ The MVP uses a validated JSONB result to avoid a very wide table. Frequently que
 | `evidence` | jsonb | Numeric evidence used by the rule |
 | `created_at` | timestamptz | Not null, default now |
 
+## 3.8 Phase B additions (migration 002 — multi-user, Decision 011/012)
+
+Never edit `001_initial_schema.sql`; `002_multi_user.sql` adds:
+
+### `users`
+
+| Column | Type | Constraint |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `email` | text | Unique, not null |
+| `password_hash` | text | Not null (Argon2) |
+| `display_name` | text | Not null |
+| `role` | text | `admin`, `operator` or `viewer` (default `operator`) |
+| `created_at` | timestamptz | Not null, default now |
+
+### `sessions`
+
+| Column | Type | Constraint |
+|---|---|---|
+| `id` | uuid | Primary key (the session identifier in the httpOnly cookie) |
+| `user_id` | uuid | FK to `users` on delete cascade |
+| `created_at` | timestamptz | Not null, default now |
+| `expires_at` | timestamptz | Not null |
+
+### Ownership columns
+
+```text
+sites.owner_id      uuid not null references gridmitra.users(id) on delete cascade
+scenarios.owner_id  uuid not null references gridmitra.users(id) on delete cascade
+```
+
+All site/scenario writes are authorized against `owner_id`. Historical `optimization_runs` keep their self-contained snapshots (Decision 013) and only soft-reference `scenario_id`.
+
+### `scenario_versions`
+
+Stores saved scenario drafts per owner (Decision 014):
+
+| Column | Type | Constraint |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `owner_id` | uuid | FK to `users` |
+| `name` | text | Not null |
+| `scenario_type` | text | Enum check |
+| `version` | integer | Not null |
+| `payload` | jsonb | Complete validated request (inputs only) |
+| `created_at` | timestamptz | Not null, default now |
+| unique | | `(owner_id, name, version)` |
+
+Optimizer results are never stored in `scenario_versions`; runs carry their own immutable snapshots.
+
 ## 4 Relationships
 
 ```text

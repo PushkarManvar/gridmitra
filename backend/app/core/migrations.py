@@ -90,7 +90,7 @@ def _split_sql_statements(sql: str) -> list[str]:
             index += 1
             continue
 
-        if char == "$":
+        if char == "$" and not single and not double:
             end = sql.find("$", index + 1)
             if end != -1:
                 candidate = sql[index : end + 1]

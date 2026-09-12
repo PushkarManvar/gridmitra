@@ -146,6 +146,62 @@ The demo must run offline from prepared data. A hosted database adds credentials
 - `db/migrations/` stays the single source of truth for both local and any future hosted environment.
 - If hosted Supabase is used later, `gridmitra` stays private from the Data API unless grants and RLS are added and tested.
 
+## Decision 011 Multi-User Ownership
+
+### Decision
+
+GridMitra is genuinely multi-user: each user owns their own sites and scenarios. Ownership is part of the database schema from the start.
+
+### Reason
+
+Operators need to keep their own communities and scenario drafts separate. Adding ownership later would force a data migration and re-architecting of every query.
+
+### Consequence
+
+`users`, `sites.owner_id` and `scenarios.owner_id` are created in migration 002. Every write is authorized against the owning user.
+
+## Decision 012 Session-Cookie Authentication
+
+### Decision
+
+Use FastAPI/PostgreSQL-owned accounts with passwords hashed by Argon2, and a session identifier in an `httpOnly`, `Secure`, `SameSite=Lax` cookie. No tokens in `localStorage`.
+
+### Reason
+
+The demo must work offline, so a hosted-only auth provider is unsuitable. Cookie sessions are simple, secure against XSS, and work with the existing local stack.
+
+### Consequence
+
+Sessions are stored server-side (`gridmitra.sessions`). Authorization is enforced by FastAPI on every write. A prepared local demo account lets the jury demo work offline with one click.
+
+## Decision 013 Immutable Run Snapshots
+
+### Decision
+
+Every optimization result is stored as an immutable snapshot (`input_snapshot`, `summary`, `dispatch_hours`, `explanations`) that is never rewritten when its source scenario is edited.
+
+### Reason
+
+Editing a scenario must not silently change a historical run; past results stay reproducible.
+
+### Consequence
+
+Runs keep a self-contained snapshot. Historical viewers render from `input_snapshot`, never from current inputs.
+
+## Decision 014 Editable Inputs, Immutable Outputs
+
+### Decision
+
+Users may edit scenario inputs (site metadata, assets, operating policy, all 24 hourly renewable/demand values, weather source). Optimizer outputs (dispatch, KPIs, reliability, explanations, warnings) are never user-editable.
+
+### Reason
+
+The optimizer is the source of truth for results; allowing manual edits would break the calculated-result guarantee and the demo's honesty rule.
+
+### Consequence
+
+The scenario editor writes inputs only. Validation happens before every optimization. Safety penalty values stay backend-controlled.
+
 ## Decision Change Format
 
 When changing a decision, append a new section containing:

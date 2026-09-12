@@ -5,7 +5,9 @@ import type {
   Scenario,
 } from "../types/index";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+// Same-origin: the Vite dev proxy forwards /api to the backend, so the httpOnly
+// session cookie flows with SameSite=Lax and no CORS handling is required.
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init);
@@ -15,6 +17,45 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return response.json() as Promise<T>;
 }
+
+// ---- auth ----
+
+export interface AuthUser {
+  user_id: string;
+  email: string;
+  display_name: string;
+  role: string;
+}
+
+export function loginUser(email: string, password: string): Promise<AuthUser> {
+  return request<AuthUser>("/api/v1/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function registerUser(
+  email: string,
+  display_name: string,
+  password: string,
+): Promise<AuthUser> {
+  return request<AuthUser>("/api/v1/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, display_name, password }),
+  });
+}
+
+export async function logoutUser(): Promise<void> {
+  await request("/api/v1/auth/logout", { method: "POST" });
+}
+
+export function getMe(): Promise<AuthUser> {
+  return request<AuthUser>("/api/v1/auth/me");
+}
+
+// ---- scenario + optimization ----
 
 export function getDemoScenario(): Promise<Scenario> {
   return request<Scenario>("/api/v1/scenarios/demo");

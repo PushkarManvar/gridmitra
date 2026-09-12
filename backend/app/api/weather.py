@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.api.deps import get_current_user
 from app.schemas.weather import WeatherForecastResponse
 from app.services.weather_service import (
     WeatherServiceError,
     get_weather_forecast,
 )
 
-router = APIRouter(prefix="/weather", tags=["weather"])
+router = APIRouter(prefix="/weather", tags=["weather"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/forecast", response_model=WeatherForecastResponse)

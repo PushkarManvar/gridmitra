@@ -289,6 +289,31 @@ FALLBACK_DATA_USED
 sheds load of that priority because supply is physically insufficient. Each is a
 `warning`. `P1_UNSERVED` remains `critical`.
 
+## 5.6 Auth and ownership (Phase B)
+
+### Role enum
+
+```text
+admin
+operator
+viewer
+```
+
+### User object
+
+| Field | Type | Rule |
+|---|---|---|
+| `user_id` | string | UUID |
+| `email` | string | Unique |
+| `display_name` | string | Not null |
+| `role` | enum | `admin`, `operator` or `viewer` |
+
+Passwords are never returned by the API. Sessions live server-side; the client only holds an `httpOnly` cookie.
+
+### Ownership
+
+Sites and scenarios carry an implicit `owner_id`; every write is authorized against the session's user. Scenario write endpoints are restricted to `admin`/`operator`; `viewer` may read history and export only.
+
 ## 6 Validation Error Contract
 
 ```json
