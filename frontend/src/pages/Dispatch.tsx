@@ -5,9 +5,6 @@ import { useApp } from "../context/AppContext";
 import { PersistenceNotice } from "../components/ui/PersistenceNotice";
 import { WarningPanel } from "../components/ui/WarningPanel";
 import { exportCsv } from "../lib/api";
-import type { BatteryConfig, DispatchHour, OptimizationSummary } from "../types/index";
-
-const EPSILON = 1e-6;
 
 function currencySymbol(currency: string): string {
   if (currency === "INR") return "₹";
@@ -16,81 +13,10 @@ function currencySymbol(currency: string): string {
   return "";
 }
 
-function buildHourExplanation(
-  hour: DispatchHour,
-  battery: BatteryConfig,
-  summary: OptimizationSummary,
-): Array<{ label: string; text: string }> {
-  const demand =
-    hour.p1_demand_kwh + hour.p2_demand_kwh + hour.p3_demand_kwh + hour.p4_demand_kwh;
-  const served =
-    hour.p1_served_kwh + hour.p2_served_kwh + hour.p3_served_kwh + hour.p4_served_kwh;
-  const unservedTotal = Math.max(0, demand - served);
-
-  const supplyParts: string[] = [];
-  if (hour.solar_used_kwh > EPSILON) supplyParts.push(`solar ${hour.solar_used_kwh.toFixed(1)} kWh`);
-  if (hour.wind_used_kwh > EPSILON) supplyParts.push(`wind ${hour.wind_used_kwh.toFixed(1)} kWh`);
-  if (hour.battery_discharge_kwh > EPSILON)
-    supplyParts.push(`battery discharge ${hour.battery_discharge_kwh.toFixed(1)} kWh`);
-  if (hour.diesel_generation_kwh > EPSILON)
-    supplyParts.push(`diesel ${hour.diesel_generation_kwh.toFixed(1)} kWh`);
-  const what =
-    `Demand was ${demand.toFixed(1)} kWh. ` +
-    (supplyParts.length
-      ? `Supplied by ${supplyParts.join(", ")}.`
-      : "No generation was dispatched this hour.") +
-    (unservedTotal > EPSILON ? ` ${unservedTotal.toFixed(2)} kWh went unserved.` : "");
-
-  const reasons: string[] = [];
-  if (hour.solar_available_kwh <= EPSILON) reasons.push("no solar availability");
-  if (hour.wind_available_kwh <= EPSILON)
-    reasons.push("wind below the 3 m/s turbine cut-in");
-  if (hour.diesel_generation_kwh > EPSILON)
-    reasons.push("renewable supply and permitted battery discharge were insufficient");
-  if (unservedTotal > EPSILON) reasons.push("total available supply was physically insufficient");
-  if (hour.renewable_curtailment_kwh > EPSILON)
-    reasons.push("demand and battery charging were already satisfied");
-  const why =
-    reasons.length > 0
-      ? reasons.join("; ") + "."
-      : "Solar and wind met demand within battery and diesel limits.";
-
-  let batteryBlock: string;
-  if (hour.battery_charge_kwh > EPSILON) {
-    batteryBlock = `Charged ${hour.battery_charge_kwh.toFixed(1)} kWh using surplus renewable energy.`;
-  } else if (hour.battery_discharge_kwh > EPSILON) {
-    batteryBlock = `Discharged ${hour.battery_discharge_kwh.toFixed(1)} kWh to help meet demand.`;
-  } else {
-    batteryBlock = `Idle — battery energy was preserved for later demand and the ${battery.terminal_reserve_target_kwh.toFixed(0)} kWh terminal reserve.`;
-  }
-  if (hour.battery_energy_end_kwh < battery.terminal_reserve_target_kwh - EPSILON) {
-    batteryBlock += ` Energy is below the reserve target this hour (${hour.battery_energy_end_kwh.toFixed(1)} kWh).`;
-  }
-
-  let resultBlock: string;
-  if (unservedTotal <= EPSILON) {
-    resultBlock = "All P1–P4 demand was served this hour.";
-  } else {
-    const unservedParts = (["p1", "p2", "p3", "p4"] as const)
-      .filter((priority) => hour[`${priority}_unserved_kwh`] > EPSILON)
-      .map((priority) => `${priority.toUpperCase()} ${hour[`${priority}_unserved_kwh`].toFixed(2)} kWh`);
-    resultBlock = `${unservedTotal.toFixed(2)} kWh unserved: ${unservedParts.join(", ")}.`;
-  }
-  if (summary.reserve_shortfall_kwh > EPSILON) {
-    resultBlock += ` Terminal reserve shortfall: ${summary.reserve_shortfall_kwh.toFixed(2)} kWh.`;
-  }
-
-  return [
-    { label: "What happened", text: what },
-    { label: "Why", text: why },
-    { label: "Battery decision", text: batteryBlock },
-    { label: "Result", text: resultBlock },
-  ];
-}
-
 export function Dispatch() {
   const { scenario, result, loading, error, run } = useApp();
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
+  const [showAllDetails, setShowAllDetails] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   if (!scenario) {
@@ -130,18 +56,17 @@ export function Dispatch() {
   const hourExplanations = result.explanations.filter(
     (explanation) => explanation.hour_index !== null,
   );
+  const decisionHours = new Set(
+    hourExplanations.flatMap((explanation) =>
+      explanation.hour_index === null ? [] : [explanation.hour_index],
+    ),
+  );
   const selectedExplanations =
     selectedHour === null
-      ? hourExplanations
+      ? []
       : hourExplanations.filter((explanation) => explanation.hour_index === selectedHour);
-  const wholeRunExplanations = result.explanations.filter(
-    (explanation) => explanation.hour_index === null,
-  );
-  const selectedHourData =
-    selectedHour === null
-      ? null
-      : result.dispatch_hours.find((hour) => hour.hour_index === selectedHour) ?? null;
-
+  const visibleExplanations = showAllDetails ? result.explanations : selectedExplanations;
+  const detailView = showAllDetails ? "all" : selectedHour === null ? "none" : "selected";
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -232,30 +157,48 @@ export function Dispatch() {
                       <th className="py-1.5 pr-2">Batt dis</th>
                       <th className="py-1.5 pr-2">SOC</th>
                       <th className="py-1.5 pr-2">P1 unserved</th>
-                      <th className="py-1.5">Explain</th>
+                      <th className="py-1.5">Decision</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {result.dispatch_hours.map((hour) => (
-                      <tr key={hour.hour_index} className={`border-b border-outline-variant/40 ${selectedHour === hour.hour_index ? "bg-primary/5" : ""}`}>
-                        <td className="py-1.5 pr-2 text-on-surface font-semibold">{hour.hour_index}:00</td>
-                        <td className="py-1.5 pr-2">{hour.solar_used_kwh.toFixed(1)}</td>
-                        <td className="py-1.5 pr-2">{hour.wind_used_kwh.toFixed(1)}</td>
-                        <td className="py-1.5 pr-2">{hour.diesel_generation_kwh.toFixed(1)}</td>
-                        <td className="py-1.5 pr-2">{hour.battery_charge_kwh.toFixed(1)}</td>
-                        <td className="py-1.5 pr-2">{hour.battery_discharge_kwh.toFixed(1)}</td>
-                        <td className="py-1.5 pr-2">{hour.battery_energy_end_kwh.toFixed(1)}</td>
-                        <td className={`py-1.5 pr-2 ${hour.p1_unserved_kwh > 0 ? "text-error font-bold" : "text-secondary"}`}>{hour.p1_unserved_kwh.toFixed(2)}</td>
-                        <td className="py-1.5">
-                          <button
-                            onClick={() => setSelectedHour(selectedHour === hour.hour_index ? null : hour.hour_index)}
-                            className="text-primary text-[11px] font-semibold hover:underline"
-                          >
-                            {selectedHour === hour.hour_index ? "Hide" : "Explain"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {result.dispatch_hours.map((hour) => {
+                      const hasDecision = decisionHours.has(hour.hour_index);
+                      const isSelected = showAllDetails || selectedHour === hour.hour_index;
+
+                      return (
+                        <tr key={hour.hour_index} className={`border-b border-outline-variant/40 ${isSelected ? "bg-primary/5" : ""}`}>
+                          <td className="py-1.5 pr-2 text-on-surface font-semibold">{hour.hour_index}:00</td>
+                          <td className="py-1.5 pr-2">{hour.solar_used_kwh.toFixed(1)}</td>
+                          <td className="py-1.5 pr-2">{hour.wind_used_kwh.toFixed(1)}</td>
+                          <td className="py-1.5 pr-2">{hour.diesel_generation_kwh.toFixed(1)}</td>
+                          <td className="py-1.5 pr-2">{hour.battery_charge_kwh.toFixed(1)}</td>
+                          <td className="py-1.5 pr-2">{hour.battery_discharge_kwh.toFixed(1)}</td>
+                          <td className="py-1.5 pr-2">{hour.battery_energy_end_kwh.toFixed(1)}</td>
+                          <td className={`py-1.5 pr-2 ${hour.p1_unserved_kwh > 0 ? "text-error font-bold" : "text-secondary"}`}>{hour.p1_unserved_kwh.toFixed(2)}</td>
+                          <td className="py-1.5">
+                            {hasDecision ? (
+                              <button
+                                onClick={() => {
+                                  if (showAllDetails) {
+                                    setShowAllDetails(false);
+                                    setSelectedHour(null);
+                                    return;
+                                  }
+                                  setSelectedHour(isSelected ? null : hour.hour_index);
+                                }}
+                                aria-label={`${isSelected ? "Hide" : "View"} decision for ${hour.hour_index}:00`}
+                                title={showAllDetails ? "Hide all decision details" : undefined}
+                                className="text-primary text-[11px] font-semibold hover:underline"
+                              >
+                                {isSelected ? "Hide" : "View"}
+                              </button>
+                            ) : (
+                              <span className="text-secondary/60" aria-label={`No decision details for ${hour.hour_index}:00`}>—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -263,36 +206,43 @@ export function Dispatch() {
 
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-on-surface">Explanations</h2>
-                <span className="text-[10px] font-mono text-secondary">
-                  {selectedHour === null ? "All hours" : `Hour ${selectedHour}:00`}
-                </span>
+                <h2 className="text-sm font-bold text-on-surface">Decision details</h2>
+                <select
+                  aria-label="Decision detail view"
+                  value={detailView}
+                  onChange={(event) => {
+                    if (event.target.value === "all") {
+                      setShowAllDetails(true);
+                      setSelectedHour(null);
+                    } else if (event.target.value === "none") {
+                      setShowAllDetails(false);
+                      setSelectedHour(null);
+                    } else {
+                      setShowAllDetails(false);
+                    }
+                  }}
+                  className="max-w-[154px] bg-surface-container border border-outline-variant rounded-md px-2 py-1 text-[10px] font-mono text-secondary"
+                >
+                  <option value="none">No details</option>
+                  {selectedHour !== null && !showAllDetails && (
+                    <option value="selected">Hour {selectedHour}:00</option>
+                  )}
+                  <option value="all">All decision details</option>
+                </select>
               </div>
-              {selectedHourData && (
-                <div className="mb-3 flex flex-col gap-2">
-                  {buildHourExplanation(selectedHourData, battery, s).map((block) => (
-                    <div key={block.label} className="p-2.5 rounded-lg bg-[#F7F4EC] border border-[#E2DDD2]">
-                      <div className="text-[10px] font-mono uppercase text-primary font-semibold mb-0.5">
-                        {block.label}
-                      </div>
-                      <p className="text-xs text-on-surface leading-relaxed">{block.text}</p>
-                    </div>
-                  ))}
-                </div>
+              {!showAllDetails && selectedHour === null && (
+                <p className="mb-3 text-xs text-secondary">
+                  Select a decision hour from the table. Only hours with an operational event have details.
+                </p>
               )}
-              {wholeRunExplanations.map((explanation) => (
-                <div key={explanation.code} className={`mb-2 p-2.5 rounded-lg text-xs ${explanation.severity === "critical" ? "bg-error/10 border border-error/30" : explanation.severity === "warning" ? "bg-[#FFFBEB] border border-[#F59E0B]/30" : "bg-[#F7F4EC] border border-[#E2DDD2]"}`}>
-                  <div className="text-[10px] font-mono uppercase text-secondary mb-0.5">{explanation.code}</div>
-                  <p className="text-on-surface">{explanation.message}</p>
-                </div>
-              ))}
-              {selectedExplanations.length === 0 && (
+              {!showAllDetails && selectedHour !== null && selectedExplanations.length === 0 && (
                 <p className="text-xs text-secondary">No hour-specific explanations for this selection.</p>
               )}
-              {selectedExplanations.map((explanation) => (
+              {visibleExplanations.map((explanation) => (
                 <div key={`${explanation.code}-${explanation.hour_index}`} className="mb-2 p-2.5 rounded-lg text-xs bg-[#F7F4EC] border border-[#E2DDD2]">
                   <div className="text-[10px] font-mono uppercase text-secondary mb-0.5">
-                    {explanation.code} · Hour {explanation.hour_index}:00
+                    {explanation.code}
+                    {explanation.hour_index !== null && ` · Hour ${explanation.hour_index}:00`}
                   </div>
                   <p className="text-on-surface">{explanation.message}</p>
                   {Object.entries(explanation.evidence).length > 0 && (
