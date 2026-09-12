@@ -30,20 +30,5 @@ def migrated_database() -> None:
 
 @pytest.fixture(scope="session")
 def client(migrated_database) -> TestClient:
-    """An authenticated API client. Registers a test operator and logs in so the
-    session cookie is present for every protected endpoint."""
-    test_client = TestClient(app, base_url="https://testserver")
-    credentials = {
-        "email": "tester@gridmitra.com",
-        "display_name": "Test Operator",
-        "password": "test-pass-1234",
-    }
-    register = test_client.post("/api/v1/auth/register", json=credentials)
-    # A prior run may have persisted the user; either way we log in afterwards.
-    assert register.status_code in (201, 409)
-    login = test_client.post(
-        "/api/v1/auth/login",
-        json={"email": credentials["email"], "password": credentials["password"]},
-    )
-    assert login.status_code == 200
-    return test_client
+    """A plain API client. Auth was removed; Firebase will replace it later."""
+    return TestClient(app)

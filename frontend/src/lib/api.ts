@@ -19,43 +19,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// ---- auth ----
-
-export interface AuthUser {
-  user_id: string;
-  email: string;
-  display_name: string;
-  role: string;
-}
-
-export function loginUser(email: string, password: string): Promise<AuthUser> {
-  return request<AuthUser>("/api/v1/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-}
-
-export function registerUser(
-  email: string,
-  display_name: string,
-  password: string,
-): Promise<AuthUser> {
-  return request<AuthUser>("/api/v1/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, display_name, password }),
-  });
-}
-
-export async function logoutUser(): Promise<void> {
-  await request("/api/v1/auth/logout", { method: "POST" });
-}
-
-export function getMe(): Promise<AuthUser> {
-  return request<AuthUser>("/api/v1/auth/me");
-}
-
 // ---- scenario + optimization ----
 
 export function getDemoScenario(): Promise<Scenario> {

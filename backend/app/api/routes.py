@@ -1,17 +1,15 @@
 import json
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response
 
-from app.api.deps import get_current_user, require_operator
 from app.models import OptimizationRequest, OptimizationResponse
 from app.repositories.persistence import get_run, list_runs
 from app.services.csv_export import render_export_csv
 from app.services.optimizer import OptimizationError, optimize_microgrid
 from app.services.persistence import persist_run
 
-router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/api/v1")
 
 
 @router.get("/scenarios/demo", response_model=OptimizationRequest)
@@ -23,15 +21,12 @@ async def demo_scenario() -> OptimizationRequest:
 
 
 @router.post("/optimize", response_model=OptimizationResponse)
-async def optimize(
-    request: OptimizationRequest,
-    user: Annotated[dict, Depends(require_operator)],
-) -> OptimizationResponse:
+async def optimize(request: OptimizationRequest) -> OptimizationResponse:
     try:
         response = optimize_microgrid(request)
     except OptimizationError as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    persistence, warnings = await persist_run(request, response, owner_id=user["id"])
+    persistence, warnings = await persist_run(request, response)
     return response.model_copy(update={"persistence": persistence, "warnings": warnings})
 
 
