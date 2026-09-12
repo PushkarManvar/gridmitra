@@ -33,8 +33,41 @@ const SECTIONS = [
     id: "model",
     title: "How GridMitra Plans Dispatch",
     body: [
-      "The optimizer is a mixed-integer linear program solved with PuLP and CBC. For every hour it decides renewable use, battery charge or discharge (never both at once), diesel output, and unserved energy per priority.",
+      "The optimizer is a mixed-integer linear program (MILP) solved with PuLP and CBC. It plans a full 24-hour horizon of one-hour intervals, and each interval uses kWh for energy and kW for capacity.",
+      "For every hour it decides renewable use, battery charge or discharge (never both at once), diesel output, and unserved energy per priority.",
       "A soft terminal reserve keeps stress scenarios solvable: a shortfall is reported and explained instead of failing the solve.",
+    ],
+  },
+  {
+    id: "objective",
+    title: "What the Optimizer Minimizes",
+    body: [
+      "The solver finds the plan with the lowest total cost across all 24 hours, balancing economics against reliability. It minimizes:",
+    ],
+    bullets: [
+      "Diesel fuel cost — litres burned × fuel price per litre.",
+      "Diesel carbon cost — CO2 emitted × the configured carbon price.",
+      "Battery wear cost — charge + discharge energy × wear cost per kWh.",
+      "Unserved-load penalties — for each reduced priority.",
+      "Terminal reserve shortfall penalty — for ending below the battery reserve target.",
+    ],
+    bodyAfter: [
+      "Penalties are weighted so the priority order is strict: one unit of a higher-priority violation can never be justified by saving all lower-priority cost. P1 is always more important than the end-of-horizon reserve, so the optimizer never interrupts a current critical load just to hold battery energy for later.",
+    ],
+  },
+  {
+    id: "constraints",
+    title: "Physical Rules the Plan Must Respect",
+    body: [
+      "Every hourly plan is constrained by the community's real equipment, so the result is always physically feasible:",
+    ],
+    bullets: [
+      "Energy balance — solar + wind + diesel + battery discharge must exactly equal served load + battery charge each hour.",
+      "Renewable limits — solar and wind used can never exceed what is available; surplus is curtailed.",
+      "Battery transition — stored energy follows charge/discharge through efficiency, staying between its minimum and maximum.",
+      "No simultaneous charging and discharging — the battery either charges, discharges, or idles.",
+      "Diesel limit — generation capped at generator capacity.",
+      "Unserved limits — demand can only be reduced by what actually exists in that hour.",
     ],
   },
   {
@@ -62,6 +95,29 @@ const SECTIONS = [
   },
 ];
 
+function Body({ paragraphs }: { paragraphs: string[] }) {
+  return (
+    <>
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="mt-2 text-sm text-secondary leading-relaxed">{paragraph}</p>
+      ))}
+    </>
+  );
+}
+
+function Bullets({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-3 flex flex-col gap-2">
+      {items.map((bullet, index) => (
+        <li key={index} className="flex items-start gap-2 text-sm text-secondary leading-relaxed">
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+          {bullet}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Documentation() {
   return (
     <div className="min-h-screen bg-surface-container-lowest">
@@ -85,19 +141,9 @@ export function Documentation() {
             {SECTIONS.map((section) => (
               <section key={section.id} id={section.id} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 scroll-mt-20">
                 <h2 className="text-base font-bold text-on-surface">{section.title}</h2>
-                {section.body?.map((paragraph, index) => (
-                  <p key={index} className="mt-2 text-sm text-secondary leading-relaxed">{paragraph}</p>
-                ))}
-                {section.bullets && (
-                  <ul className="mt-3 flex flex-col gap-2">
-                    {section.bullets.map((bullet, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-secondary leading-relaxed">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <Body paragraphs={section.body ?? []} />
+                {section.bullets && <Bullets items={section.bullets} />}
+                {section.bodyAfter && <Body paragraphs={section.bodyAfter} />}
               </section>
             ))}
           </div>
