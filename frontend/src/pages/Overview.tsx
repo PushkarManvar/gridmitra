@@ -205,13 +205,6 @@ export function Overview() {
                 ))}
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-secondary-fixed flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface-container-low border border-outline-variant text-[11px] font-mono text-primary">
-                <span className="material-symbols-outlined text-[15px]">memory</span>
-                <span>Solver Engine: PuLP / CBC</span>
-              </div>
-              <span className="text-[10px] font-mono uppercase font-semibold text-secondary">{result.status.replace("_", " ")}</span>
-            </div>
           </div>
         </section>
 

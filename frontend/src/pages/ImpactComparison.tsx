@@ -65,10 +65,6 @@ export function ImpactComparison() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-on-surface tracking-tight">Impact Comparison</h1>
-              <p className="text-xs text-secondary mt-0.5">
-                GridMitra's predictive dispatch vs a reactive no-lookahead baseline, on identical inputs. Run{" "}
-                <span className="font-mono">{result.run_id.slice(0, 8)}</span> · {scenario.scenario_name}.
-              </p>
             </div>
             <div className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs font-semibold shadow-xs">
               <span className="text-secondary font-mono mr-1">Baseline:</span>
