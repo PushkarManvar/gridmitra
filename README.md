@@ -4,10 +4,13 @@ GridMitra is a reliability-first microgrid energy mix optimizer for off-grid com
 
 GridMitra is an operator decision-support prototype. It does not directly control physical equipment.
 
+> **Note:** the app requires sign-in with Firebase Authentication (Google or email/password). See [Firebase setup](#firebase-setup) below.
+
 ## Core Demo
 
 ```text
-Load prepared community
+Sign in
+→ load prepared community
 → review demand and renewable availability
 → run 24-hour optimization
 → inspect dispatch and battery behaviour
@@ -52,6 +55,8 @@ gridmitra/
 ├── data/
 │   └── demo_scenario.json
 ├── db/
+├── firebase/
+│   └── serviceAccountKey.json   (gitignored — drop your Firebase key here)
 ├── docs/
 ├── scripts/
 ├── .github/
@@ -87,6 +92,23 @@ Open:
 - Frontend: `http://localhost:5173`
 - API documentation: `http://localhost:8000/docs`
 - Health endpoint: `http://localhost:8000/api/v1/health`
+
+## Firebase Setup
+
+The app authenticates with Firebase (Google or email/password). Two pieces:
+
+1. **Frontend config** — already baked into `frontend/src/lib/firebase.ts` for the
+   `gridmitra` project. To use a different project, set the `VITE_FIREBASE_*`
+   variables in `.env`.
+2. **Backend verification** — drop your Firebase service-account private key at
+   `firebase/serviceAccountKey.json`. The backend auto-detects it (mounted at
+   `/firebase/serviceAccountKey.json`) and verifies ID tokens on every request.
+   Without the key, requests fall back to the shared demo owner. See
+   `firebase/README.md` for the full steps.
+
+Before first sign-in, enable **Google** and **Email/Password** providers and add
+`localhost` to the **Authorized domains** in the Firebase console
+(Authentication → Settings).
 
 ## Verification
 
@@ -164,10 +186,11 @@ Create the empty private GitHub repository first and do not add a GitHub-generat
 
 ## Release
 
-The final demonstrated build is tagged:
+The demonstrated builds are tagged:
 
 ```text
-v0.1.0-hackout-demo
+jury-demo-v1
+jury-demo-v2
 ```
 
-Only create the tag after the release gate in `docs/TEST_PLAN.md` passes.
+Only create a new tag after the release gate in `docs/TEST_PLAN.md` passes.
